@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <link rel="stylesheet" href="estilos.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backtesting Básico</title>
+ 
+</head>
+
+<body>
+  <div class="nav">
+    <button id="tab-entry-btn" class="active">Registrar Trade</button>
+    <button id="tab-diary-btn">Diario</button>
+    <button id="tab-stats-btn">Estadísticas</button>
+  </div>
+  <div class="container">
+    <div id="tab-entry" class="tab active">
+      <h2>Registro de Operación</h2>
+      <div class="form-group">
+        <label for="asset">Activo Operado</label>
+        <select id="asset">
+          <option>EUR/USD</option>
+          <option>USD/JPY</option>
+          <option>GBP/USD</option>
+          <option>USD/CHF</option>
+          <option>AUD/USD</option>
+          <option>NZD/USD</option>
+          <option>USD/CAD</option>
+          <option>EUR/GBP</option>
+          <option>EUR/JPY</option>
+          <option>GBP/JPY</option>
+          <option>AUD/JPY</option>
+          <option>NZD/JPY</option>
+          <option>CHF/JPY</option>
+          <option>EUR/AUD</option>
+          <option>EUR/NZD</option>
+          <option>EUR/CHF</option>
+          <option>GBP/CHF</option>
+          <option>AUD/CHF</option>
+          <option>NZD/CHF</option>
+          <option>CAD/CHF</option>
+          <option>GBP/AUD</option>
+          <option>GBP/NZD</option>
+          <option>GBP/CAD</option>
+          <option>AUD/CAD</option>
+          <option>NZD/CAD</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="resultMxn">Resultado (MXN)</label>
+        <input type="number" id="resultMxn" step="0.01" placeholder="Ej: 2500.00">
+      </div>
+      <div class="form-group">
+        <label for="lots">Lotes</label>
+        <input type="number" id="lots" step="0.01" placeholder="Ej: 1.00">
+      </div>
+      <div class="form-group">
+        <label for="direction">Dirección</label>
+        <select id="direction"><option>Compra</option><option>Venta</option></select>
+      </div>
+      <div class="form-group">
+        <label for="openTime">Tiempo de Apertura</label>
+        <input type="datetime-local" id="openTime">
+      </div>
+      <div class="form-group">
+        <label for="closeTime">Tiempo de Cierre</label>
+        <input type="datetime-local" id="closeTime">
+      </div>
+      <div class="form-group">
+        <label for="openPrice">Precio de Apertura</label>
+        <input type="number" id="openPrice" step="0.0001">
+      </div>
+      <div class="form-group">
+        <label for="closePrice">Precio de Cierre</label>
+        <input type="number" id="closePrice" step="0.0001">
+      </div>
+
+      <div class="form-group">
+        <label for="strategy">Estrategia</label>
+
+        <select id="strategy">
+            <option value="CCI">Script CCI</option>
+            <option value="RSI">Script RSI</option>
+            <option value="MACD">Script MACD</option>
+            <option value="AO">Script AO</option>
+            <option value="TII">Script TII</option>
+            <option value="DeMarker">Script DeMarker</option>
+            <option value="Estocastico">Script Estocástico</option>
+            <option value="CruceMMs">Script cruce de MMs</option>
+            <option value="SAR">Script SAR</option>
+            <option value="BMSB">Script BMSB</option>
+            <option value="CDM-RSI">Script CDM-RSI</option>
+            <option value="EMA-Grupos">Script EMA Grupos</option>
+          </select>
+
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Notas</label>
+        <textarea id="notes" rows="2" placeholder="Comentarios adicionales..."></textarea>
+      </div>
+      <button class="btn" onclick="addTrade()">Agregar Trade</button>
+    </div>
+
+    <div id="tab-diary" class="tab">
+      <h2>Diario de Operaciones</h2>
+      <div id="diaryContainer"></div>
+    </div>
+
+    <div id="tab-stats" class="tab">
+      <h2>Estadísticas Generales</h2>
+      <div id="statsContainer" class="stats"></div>
+      <div class="form-group">
+        <button onclick="saveData()">Guardar Datos en Cookies</button>
+      </div>
+      <div class="form-group">
+        <button class="clear" onclick="clearData()">Eliminar Datos Locales y Cookies</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="javascript.js"></script>
+
+</body>
+</html>
