@@ -1,4 +1,3 @@
-
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
@@ -81,12 +80,60 @@ function renderStats() {
   const winRate = total ? (trades.filter(t => t.resultMxn > 0).length / total * 100).toFixed(2) : '0.00';
   const best = total ? Math.max(...trades.map(t => t.resultMxn)) : 0;
   const worst = lossesArray.length ? Math.min(...lossesArray) : 0;
+
+  // Calcular el uso de almacenamiento de forma más precisa
+  const jsonString = JSON.stringify(trades);
+  const storageUsed = jsonString.length * 2; // Cada carácter en UTF-16 usa 2 bytes
+  const storageUsedKB = (storageUsed / 1024).toFixed(2);
+  const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(4);
+
+  // Calcular tamaño promedio por trade y estimación de trades restantes
+  const avgSizePerTrade = total > 0 ? storageUsed / total : 0;
+  const remainingTrades5MB = Math.floor((5 * 1024 * 1024 - storageUsed) / avgSizePerTrade);
+  const remainingTrades10MB = Math.floor((10 * 1024 * 1024 - storageUsed) / avgSizePerTrade);
+
+  // Calcular estimaciones basadas en uso real
+  const tradesPerYear = 600; // Asumimos 600 trades por año
+  const yearsEstimate5MB = Math.floor(remainingTrades5MB / tradesPerYear);
+  const yearsEstimate10MB = Math.floor(remainingTrades10MB / tradesPerYear);
+
+  // Función para determinar la clase y descripción de la tasa de aciertos
+  const getWinRateInfo = (rate) => {
+    const numRate = parseFloat(rate);
+    if (numRate >= 80) return { class: 'winrate-excellent', desc: 'excelente' };
+    if (numRate >= 51) return { class: 'winrate-good', desc: 'buena' };
+    if (numRate >= 30) return { class: 'winrate-poor', desc: 'regular' };
+    return { class: 'winrate-bad', desc: 'mala' };
+  };
+
+  const winRateInfo = getWinRateInfo(winRate);
+
   document.getElementById('statsContainer').innerHTML = `
+    <div class="storage-info">
+      Has registrado un total de ${total} trades, lo que supone un uso de memoria de ${storageUsedKB} KB (${storageUsedMB} MB)
+      <div class="storage-limit-info">El límite de LocalStorage es aproximadamente 5-10 MB</div>
+      ${total > 0 ? `
+        <div class="storage-limit-info">
+          En base a un límite de 5MB y el tamaño promedio del registro (${(avgSizePerTrade / 1024).toFixed(2)} KB por trade), 
+          se estima que esa capacidad te permita registrar un restante de ${remainingTrades5MB.toLocaleString()} trades.
+        </div>
+        <div class="storage-limit-info">
+          Si el límite fuera de 10MB, podrías registrar aproximadamente ${remainingTrades10MB.toLocaleString()} trades adicionales.
+        </div>
+        <div class="storage-capacity-info">
+          <strong>Capacidad a largo plazo:</strong>
+          <ul>
+            <li>Con el límite de 5MB: Podrías registrar aproximadamente ${yearsEstimate5MB} años más de operaciones (asumiendo ${tradesPerYear} trades por año)</li>
+            <li>Con el límite de 10MB: Podrías registrar aproximadamente ${yearsEstimate10MB} años más de operaciones</li>
+          </ul>
+        </div>
+      ` : ''}
+    </div>
     <div>1. Trades Totales: ${total}</div>
-    <div>2. Ganancia Total: ${gains.toFixed(2)} MXN</div>
-    <div>3. Acumulado de Pérdidas: ${losses.toFixed(2)} MXN</div>
-    <div>4. P&L Neto: ${pnl.toFixed(2)} MXN</div>
-    <div>5. Tasa de Aciertos: ${winRate}%</div>
+    <div>2. Ganancia Total: <span class="${gains >= 0 ? 'positive' : 'negative'}">${gains.toFixed(2)} MXN</span></div>
+    <div>3. Acumulado de Pérdidas: <span class="${losses >= 0 ? 'positive' : 'negative'}">${losses.toFixed(2)} MXN</span></div>
+    <div>4. P&L Neto: <span class="${pnl >= 0 ? 'positive' : 'negative'}">${pnl.toFixed(2)} MXN</span></div>
+    <div>5. Tasa de Aciertos: <span class="${winRateInfo.class}">${winRate}%</span> | <span class="winrate-legend">Tienes una <span class="${winRateInfo.class}">${winRateInfo.desc}</span> tasa de aciertos</span></div>
     <div>6. Mejor Trade: ${best.toFixed(2)} MXN</div>
     <div>7. Peor Trade: ${worst.toFixed(2)} MXN</div>
   `;
@@ -99,15 +146,17 @@ function saveData() {
   }
   const data = JSON.stringify(trades);
   localStorage.setItem('trades', data);
-  alert('Datos guardados en localStorage.');
+  alert('✅ Los datos han sido guardados exitosamente en el almacenamiento local del navegador.\n\nLos datos permanecerán disponibles incluso después de cerrar el navegador.');
 }
 
 function clearData() {
-  trades = [];
-  localStorage.removeItem('trades');
-  renderDiary(); 
-  renderStats();
-  alert('Datos eliminados de localStorage.');
+  if (confirm('⚠️ ¿Estás seguro que deseas eliminar todos los datos guardados?\n\nEsta acción no se puede deshacer.')) {
+    trades = [];
+    localStorage.removeItem('trades');
+    renderDiary(); 
+    renderStats();
+    alert('🗑️ Todos los datos han sido eliminados exitosamente del almacenamiento local.');
+  }
 }
 
 window.onload = function() {
