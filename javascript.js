@@ -1,3 +1,12 @@
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(registration => console.log('Service Worker registrado:', registration))
+      .catch(error => console.error('Error al registrar el Service Worker:', error));
+  });
+}
+
 let trades = [];
 document.getElementById('tab-entry-btn').addEventListener('click', () => showTab('entry'));
 document.getElementById('tab-diary-btn').addEventListener('click', () => showTab('diary'));
@@ -84,28 +93,30 @@ function renderStats() {
 }
 
 function saveData() {
-  if (!trades.length) { alert('No hay datos para guardar.'); return; }
+  if (!trades.length) { 
+    alert('No hay datos para guardar.'); 
+    return; 
+  }
   const data = JSON.stringify(trades);
-  document.cookie = 'trades=' + encodeURIComponent(data) + ';path=/;max-age=' + (60 * 60 * 24 * 365) + ';';
   localStorage.setItem('trades', data);
-  alert('Datos guardados en cookies y localStorage.');
+  alert('Datos guardados en localStorage.');
 }
 
 function clearData() {
   trades = [];
-  document.cookie = 'trades=;path=/;max-age=0';
   localStorage.removeItem('trades');
-  renderDiary(); renderStats();
-  alert('Datos eliminados de local y cookies.');
+  renderDiary(); 
+  renderStats();
+  alert('Datos eliminados de localStorage.');
 }
 
 window.onload = function() {
-  let saved = localStorage.getItem('trades');
-  if (!saved) {
-    const match = document.cookie.match(/(?:^|;\s*)trades=([^;]+)/);
-    if (match) saved = decodeURIComponent(match[1]);
-  }
+  const saved = localStorage.getItem('trades');
   if (saved) {
-    try { trades = JSON.parse(saved); } catch (e) { trades = []; }
+    try { 
+      trades = JSON.parse(saved); 
+    } catch (e) { 
+      trades = []; 
+    }
   }
 };
