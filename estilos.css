@@ -45,6 +45,16 @@
   }
   .btn:hover, .form-group button:hover { background: var(--primary-dark); }
   .form-group button.clear { background: var(--danger); }
+  .btn-roi {
+    background: #2196F3 !important;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .btn-roi:hover {
+    background: #1976D2 !important;
+  }
   .table-responsive {
     width: 100%;
     overflow-x: auto;
@@ -77,6 +87,55 @@
   th { background: var(--primary); color: #fff; }
   .stats { margin-top: 16px; }
   .stats div { margin-bottom: 8px; font-size: 14px; }
+
+  .storage-info {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--primary);
+    font-weight: 500;
+  }
+
+  .storage-limit-info {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .storage-capacity-info {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .storage-capacity-info strong {
+    color: var(--primary);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .storage-capacity-info ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+
+  .storage-capacity-info li {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 6px;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .storage-capacity-info li:before {
+    content: "•";
+    color: var(--primary);
+    position: absolute;
+    left: 0;
+  }
 
   .tab.active { display: block; }
   /* Permit scroll dentro de la pestaña de reportes */
@@ -119,4 +178,42 @@
   .trade-body p {
     margin: 4px 0;
     font-size: 14px;
+  }
+
+  /* Estilos para los resultados de ROI */
+  .positive {
+    color: #28a745;
+    font-weight: bold;
+  }
+  
+  .negative {
+    color: #dc3545;
+    font-weight: bold;
+  }
+
+  /* Clases para la tasa de aciertos */
+  .winrate-excellent {
+    color: #28a745;
+    font-weight: bold;
+  }
+  
+  .winrate-good {
+    color: #ff9800;
+    font-weight: bold;
+  }
+  
+  .winrate-poor {
+    color: #ff5722;
+    font-weight: bold;
+  }
+  
+  .winrate-bad {
+    color: #b71c1c;
+    font-weight: bold;
+  }
+
+  /* Estilo para la leyenda de la tasa de aciertos */
+  .winrate-legend {
+    font-size: 0.85em;
+    font-style: italic;
   }
