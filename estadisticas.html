@@ -13,8 +13,128 @@
             <div id="datetime" class="datetime"></div>
         </div>
 
-        <div id="statsContainer" class="stats">
-            <!-- El contenido se cargará dinámicamente -->
+        <div class="stats-sections">
+            <!-- Sección de Estadísticas Generales -->
+            <section class="stats-section general-stats">
+                <h2>Estadísticas Generales</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3>Total de Operaciones</h3>
+                            <div class="stat-value" id="totalTrades">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3>Operaciones Ganadoras</h3>
+                            <div class="stat-value" id="winningTrades">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">❌</div>
+                        <div class="stat-content">
+                            <h3>Operaciones Perdedoras</h3>
+                            <div class="stat-value" id="losingTrades">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <h3>Win Rate</h3>
+                            <div class="stat-value" id="winRate">-</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Estadísticas de Rendimiento -->
+            <section class="stats-section performance-stats">
+                <h2>Rendimiento</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-content">
+                            <h3>PNL Final</h3>
+                            <div class="stat-value" id="totalProfit">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📉</div>
+                        <div class="stat-content">
+                            <h3>Drawdown Máximo</h3>
+                            <div class="stat-value" id="maxDrawdown">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚖️</div>
+                        <div class="stat-content">
+                            <h3>Ratio Beneficio/Riesgo</h3>
+                            <div class="stat-value" id="profitRiskRatio">-</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Estrategias -->
+            <section class="stats-section strategies-stats">
+                <h2>Estrategias</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💎</div>
+                        <div class="stat-content">
+                            <h3>Estrategia más Rentable</h3>
+                            <div class="stat-value" id="mostProfitableStrategy">-</div>
+                            <div class="stat-description">Estrategia que ha generado mayor beneficio neto</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3>Estrategia más Operada</h3>
+                            <div class="stat-value" id="mostUsedStrategy">-</div>
+                            <div class="stat-description">Estrategia con mayor número de operaciones</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <h3>Estrategia más Fiable</h3>
+                            <div class="stat-value" id="mostReliableStrategy">-</div>
+                            <div class="stat-description">Estrategia con mayor porcentaje de aciertos</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección para Estadísticas Futuras -->
+            <section class="stats-section future-stats">
+                <h2>Análisis Avanzado</h2>
+                <div class="stats-grid">
+                    <div class="stat-card placeholder">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3>Análisis por Horario</h3>
+                            <div class="stat-value">Próximamente</div>
+                        </div>
+                    </div>
+                    <div class="stat-card placeholder">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <h3>Análisis por Activo</h3>
+                            <div class="stat-value">Próximamente</div>
+                        </div>
+                    </div>
+                    <div class="stat-card placeholder">
+                        <div class="stat-icon">📉</div>
+                        <div class="stat-content">
+                            <h3>Análisis de Correlación</h3>
+                            <div class="stat-value">Próximamente</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
 
         <button class="nav-btn btn-roi" onclick="window.location.href='calculadora-roi.html'">Calculadora de Diferencia</button>
@@ -60,9 +180,12 @@
         }
 
         // Cargar tema y actualizar fecha/hora al iniciar
-        loadTheme();
-        setInterval(updateDateTime, 1000);
-        updateDateTime();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            setInterval(updateDateTime, 1000);
+            updateDateTime();
+            renderStats(); // Asegurarnos de que las estadísticas se muestren al cargar la página
+        });
     </script>
 </body>
 </html> 
