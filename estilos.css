@@ -472,3 +472,133 @@ body.dark .card {
 body.dark .container {
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
+
+/* Nuevos estilos para las secciones de estadísticas */
+.stats-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.stats-section {
+    background-color: var(--card-background);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.stats-section h2 {
+    color: var(--text-color);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background-color: var(--container-background);
+    border-radius: 10px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    min-width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-top: 0.5rem;
+}
+
+/* Estilos para las tarjetas placeholder */
+.stat-card.placeholder {
+    opacity: 0.7;
+    background-color: var(--card-background);
+}
+
+.stat-card.placeholder .stat-value {
+    color: var(--text-color);
+    opacity: 0.6;
+}
+
+/* Estilos específicos para cada sección */
+.general-stats .stat-card {
+    border-left: 4px solid #2196F3;
+}
+
+.performance-stats .stat-card {
+    border-left: 4px solid #4CAF50;
+}
+
+.future-stats .stat-card {
+    border-left: 4px solid #FF9800;
+}
+
+/* Ajustes para tema oscuro */
+body.dark .stat-card {
+    background-color: var(--background-color);
+}
+
+body.dark .stat-card.placeholder {
+    background-color: var(--card-background);
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.5rem;
+        min-width: 2.5rem;
+        height: 2.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+}
