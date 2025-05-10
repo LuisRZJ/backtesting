@@ -133,41 +133,127 @@ function deleteTrade(index) {
 }
 
 function renderStats() {
-  const statsContainer = document.getElementById('statsContainer');
-  if (!statsContainer) return;
-
   const trades = JSON.parse(localStorage.getItem('trades')) || [];
   const total = trades.length;
+  const winningTrades = trades.filter(t => parseFloat(t.resultMxn) > 0).length;
+  const losingTrades = trades.filter(t => parseFloat(t.resultMxn) < 0).length;
   const gains = trades.filter(t => parseFloat(t.resultMxn) > 0).reduce((sum, t) => sum + parseFloat(t.resultMxn), 0);
   const lossesArray = trades.filter(t => parseFloat(t.resultMxn) < 0).map(t => parseFloat(t.resultMxn));
   const losses = lossesArray.reduce((sum, val) => sum + val, 0);
   const pnl = gains + losses;
-  const winRate = total ? (trades.filter(t => parseFloat(t.resultMxn) > 0).length / total * 100).toFixed(2) : '0.00';
+  const winRate = total ? (winningTrades / total * 100).toFixed(2) : '0.00';
   const best = total ? Math.max(...trades.map(t => parseFloat(t.resultMxn))) : 0;
   const worst = lossesArray.length ? Math.min(...lossesArray) : 0;
+  const avgWin = winningTrades ? (gains / winningTrades).toFixed(2) : 0;
+  const avgLoss = losingTrades ? (losses / losingTrades).toFixed(2) : 0;
+  const profitFactor = Math.abs(losses) ? (gains / Math.abs(losses)).toFixed(2) : 0;
 
-  // Función para determinar la clase y descripción de la tasa de aciertos
-  const getWinRateInfo = (rate) => {
-    const numRate = parseFloat(rate);
-    if (numRate >= 80) return { class: 'winrate-excellent', desc: 'excelente' };
-    if (numRate >= 51) return { class: 'winrate-good', desc: 'buena' };
-    if (numRate >= 30) return { class: 'winrate-poor', desc: 'regular' };
-    return { class: 'winrate-bad', desc: 'mala' };
-  };
+  // Cálculos de estrategias
+  const strategyStats = {};
+  trades.forEach(trade => {
+    const strategy = trade.strategy || 'Sin estrategia';
+    if (!strategyStats[strategy]) {
+      strategyStats[strategy] = {
+        total: 0,
+        wins: 0,
+        pnl: 0
+      };
+    }
+    strategyStats[strategy].total++;
+    strategyStats[strategy].pnl += parseFloat(trade.resultMxn);
+    if (parseFloat(trade.resultMxn) > 0) {
+      strategyStats[strategy].wins++;
+    }
+  });
 
-  const winRateInfo = getWinRateInfo(winRate);
+  // Encontrar estrategia más rentable
+  let mostProfitable = { name: 'N/A', pnl: 0 };
+  Object.entries(strategyStats).forEach(([strategy, stats]) => {
+    if (stats.pnl > mostProfitable.pnl) {
+      mostProfitable = { name: strategy, pnl: stats.pnl };
+    }
+  });
 
-  statsContainer.innerHTML = `
-    <div style="margin-top: 20px;">
-      <div>1. Trades Totales: ${total}</div>
-      <div>2. Ganancia Total: <span class="${gains >= 0 ? 'positive' : 'negative'}">${gains.toFixed(2)} MXN</span></div>
-      <div>3. Acumulado de Pérdidas: <span class="${losses >= 0 ? 'positive' : 'negative'}">${losses.toFixed(2)} MXN</span></div>
-      <div>4. P&L Neto: <span class="${pnl >= 0 ? 'positive' : 'negative'}">${pnl.toFixed(2)} MXN</span></div>
-      <div>5. Tasa de Aciertos: <span class="${winRateInfo.class}">${winRate}%</span> | <span class="winrate-legend">Tienes una <span class="${winRateInfo.class}">${winRateInfo.desc}</span> tasa de aciertos</span></div>
-      <div>6. Mejor Trade: ${best.toFixed(2)} MXN</div>
-      <div>7. Peor Trade: ${worst.toFixed(2)} MXN</div>
-    </div>
-  `;
+  // Encontrar estrategia más operada
+  let mostUsed = { name: 'N/A', total: 0 };
+  Object.entries(strategyStats).forEach(([strategy, stats]) => {
+    if (stats.total > mostUsed.total) {
+      mostUsed = { name: strategy, total: stats.total };
+    }
+  });
+
+  // Encontrar estrategia más fiable
+  let mostReliable = { name: 'N/A', winRate: 0 };
+  Object.entries(strategyStats).forEach(([strategy, stats]) => {
+    const winRate = (stats.wins / stats.total) * 100;
+    if (winRate > mostReliable.winRate) {
+      mostReliable = { name: strategy, winRate: winRate };
+    }
+  });
+
+  // Actualizar estadísticas generales
+  const totalTradesElement = document.getElementById('totalTrades');
+  const winningTradesElement = document.getElementById('winningTrades');
+  const losingTradesElement = document.getElementById('losingTrades');
+  const winRateElement = document.getElementById('winRate');
+  const totalProfitElement = document.getElementById('totalProfit');
+  const maxDrawdownElement = document.getElementById('maxDrawdown');
+  const profitRiskRatioElement = document.getElementById('profitRiskRatio');
+
+  if (totalTradesElement) totalTradesElement.textContent = total;
+  if (winningTradesElement) winningTradesElement.textContent = winningTrades;
+  if (losingTradesElement) losingTradesElement.textContent = losingTrades;
+  if (winRateElement) {
+    winRateElement.textContent = `${winRate}%`;
+    if (parseFloat(winRate) >= 80) {
+      winRateElement.className = 'stat-value winrate-excellent';
+    } else if (parseFloat(winRate) >= 51) {
+      winRateElement.className = 'stat-value winrate-good';
+    } else if (parseFloat(winRate) >= 30) {
+      winRateElement.className = 'stat-value winrate-poor';
+    } else {
+      winRateElement.className = 'stat-value winrate-bad';
+    }
+  }
+
+  // Actualizar estadísticas de rendimiento
+  if (totalProfitElement) {
+    totalProfitElement.textContent = `${pnl.toFixed(2)} MXN`;
+    totalProfitElement.className = `stat-value ${pnl >= 0 ? 'positive' : 'negative'}`;
+  }
+  if (maxDrawdownElement) {
+    maxDrawdownElement.textContent = `${worst.toFixed(2)} MXN`;
+    maxDrawdownElement.className = `stat-value ${worst >= 0 ? 'positive' : 'negative'}`;
+  }
+  if (profitRiskRatioElement) {
+    profitRiskRatioElement.textContent = profitFactor;
+    profitRiskRatioElement.className = `stat-value ${profitFactor >= 1 ? 'positive' : 'negative'}`;
+  }
+
+  // Actualizar estadísticas de estrategias
+  const mostProfitableElement = document.getElementById('mostProfitableStrategy');
+  const mostUsedElement = document.getElementById('mostUsedStrategy');
+  const mostReliableElement = document.getElementById('mostReliableStrategy');
+
+  if (mostProfitableElement) {
+    mostProfitableElement.textContent = `${mostProfitable.name} (${mostProfitable.pnl.toFixed(2)} MXN)`;
+    mostProfitableElement.className = `stat-value ${mostProfitable.pnl >= 0 ? 'positive' : 'negative'}`;
+  }
+  if (mostUsedElement) {
+    mostUsedElement.textContent = `${mostUsed.name} (${mostUsed.total} ops)`;
+  }
+  if (mostReliableElement) {
+    mostReliableElement.textContent = `${mostReliable.name} (${mostReliable.winRate.toFixed(1)}%)`;
+    if (mostReliable.winRate >= 80) {
+      mostReliableElement.className = 'stat-value winrate-excellent';
+    } else if (mostReliable.winRate >= 51) {
+      mostReliableElement.className = 'stat-value winrate-good';
+    } else if (mostReliable.winRate >= 30) {
+      mostReliableElement.className = 'stat-value winrate-poor';
+    } else {
+      mostReliableElement.className = 'stat-value winrate-bad';
+    }
+  }
 }
 
 function saveData() {
