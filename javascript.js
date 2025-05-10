@@ -6,11 +6,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-let trades = [];
-document.getElementById('tab-entry-btn').addEventListener('click', () => showTab('entry'));
-document.getElementById('tab-diary-btn').addEventListener('click', () => showTab('diary'));
-document.getElementById('tab-stats-btn').addEventListener('click', () => showTab('stats'));
-
 function showTab(tab) {
   ['entry', 'diary', 'stats'].forEach(t => document.getElementById('tab-' + t).classList.remove('active'));
   ['entry', 'diary', 'stats'].forEach(t => document.getElementById('tab-' + t + '-btn').classList.remove('active'));
@@ -21,22 +16,48 @@ function showTab(tab) {
 }
 
 function addTrade() {
-  const asset = document.getElementById('asset').value;
-  const resultMxn = parseFloat(document.getElementById('resultMxn').value);
-  const lots = parseFloat(document.getElementById('lots').value);
-  const direction = document.getElementById('direction').value;
-  const openTime = document.getElementById('openTime').value;
-  const closeTime = document.getElementById('closeTime').value;
-  const openPrice = parseFloat(document.getElementById('openPrice').value);
-  const closePrice = parseFloat(document.getElementById('closePrice').value);
-  const strategy = document.getElementById('strategy').value;
-  const notes = document.getElementById('notes').value;
-  if (!asset || isNaN(resultMxn) || isNaN(lots) || !openTime || !closeTime || isNaN(openPrice) || isNaN(closePrice)) {
-    alert('Completa todos los campos obligatorios con valores válidos.');
+  const trade = {
+    asset: document.getElementById('asset').value,
+    resultMxn: document.getElementById('resultMxn').value,
+    lots: document.getElementById('lots').value,
+    direction: document.getElementById('direction').value,
+    openTime: document.getElementById('openTime').value,
+    closeTime: document.getElementById('closeTime').value,
+    openPrice: document.getElementById('openPrice').value,
+    closePrice: document.getElementById('closePrice').value,
+    strategy: document.getElementById('strategy').value,
+    notes: document.getElementById('notes').value
+  };
+
+  if (!trade.asset || !trade.resultMxn || !trade.lots || !trade.direction || 
+      !trade.openTime || !trade.closeTime || !trade.openPrice || !trade.closePrice) {
+    alert('Por favor, completa todos los campos requeridos');
     return;
   }
-  trades.push({ asset, resultMxn, lots, direction, openTime, closeTime, openPrice, closePrice, strategy, notes });
-  clearForm();
+
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  trades.push(trade);
+  localStorage.setItem('trades', JSON.stringify(trades));
+
+  document.getElementById('resultMxn').value = '';
+  document.getElementById('lots').value = '';
+  document.getElementById('openTime').value = '';
+  document.getElementById('closeTime').value = '';
+  document.getElementById('openPrice').value = '';
+  document.getElementById('closePrice').value = '';
+  document.getElementById('notes').value = '';
+
+  alert('Trade agregado correctamente');
+  
+  if (typeof loadCardData === 'function') {
+    loadCardData();
+  }
+  if (document.getElementById('diaryContainer')) {
+    renderDiary();
+  }
+  if (document.getElementById('statsContainer')) {
+    renderStats();
+  }
 }
 
 function clearForm() {
@@ -46,56 +67,84 @@ function clearForm() {
 
 function renderDiary() {
   const diaryContainer = document.getElementById('diaryContainer');
+  if (!diaryContainer) return;
+
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
   diaryContainer.innerHTML = '';
-  trades.forEach((t, i) => {
-    const card = document.createElement('div');
-    card.className = `trade-card ${t.resultMxn > 0 ? 'gain' : 'loss'}`;
-    card.innerHTML = `
+
+  if (trades.length === 0) {
+    diaryContainer.innerHTML = '<p>No hay trades registrados aún.</p>';
+    return;
+  }
+
+  trades.slice().reverse().forEach((trade, index) => {
+    const tradeCard = document.createElement('div');
+    tradeCard.className = `trade-card ${parseFloat(trade.resultMxn) >= 0 ? 'gain' : 'loss'}`;
+    
+    // Calcular el índice real en el array original (no invertido)
+    const realIndex = trades.length - 1 - index;
+    
+    // Formatear el par de divisas
+    const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+    
+    // Traducir la dirección
+    const direction = trade.direction === 'long' ? 'Compra' : 'Venta';
+    
+    tradeCard.innerHTML = `
       <div class="trade-header">
-        <h3>Trade #${i + 1}</h3>
-        <p><strong>Activo:</strong> ${t.asset}</p>
+        <h3>${formattedAsset} - ${direction}</h3>
+        <button class="btn-delete" onclick="deleteTrade(${realIndex})" title="Eliminar trade">
+          <span class="delete-icon">×</span>
+        </button>
       </div>
       <div class="trade-body">
-        <p><strong>Resultado:</strong> ${t.resultMxn.toFixed(2)} MXN</p>
-        <p><strong>Lotes:</strong> ${t.lots.toFixed(2)}</p>
-        <p><strong>Dirección:</strong> ${t.direction}</p>
-        <p><strong>Apertura:</strong> ${t.openTime.replace('T', ' ')}</p>
-        <p><strong>Cierre:</strong> ${t.closeTime.replace('T', ' ')}</p>
-        <p><strong>Precio Apertura:</strong> ${t.openPrice.toFixed(4)}</p>
-        <p><strong>Precio Cierre:</strong> ${t.closePrice.toFixed(4)}</p>
-        <p><strong>Estrategia:</strong> ${t.strategy}</p>
-        <p><strong>Notas:</strong> ${t.notes}</p>
+        <p>Resultado: ${parseFloat(trade.resultMxn).toFixed(2)} MXN</p>
+        <p>Lotes: ${trade.lots}</p>
+        <p>Apertura: ${new Date(trade.openTime).toLocaleString()}</p>
+        <p>Cierre: ${new Date(trade.closeTime).toLocaleString()}</p>
+        <p>Precio de Apertura: ${trade.openPrice}</p>
+        <p>Precio de Cierre: ${trade.closePrice}</p>
+        <p>Estrategia: ${trade.strategy}</p>
+        ${trade.notes ? `<p>Notas: ${trade.notes}</p>` : ''}
       </div>
     `;
-    diaryContainer.appendChild(card);
+    
+    diaryContainer.appendChild(tradeCard);
   });
 }
 
+function deleteTrade(index) {
+  if (confirm('¿Estás seguro de que deseas eliminar este trade?')) {
+    const trades = JSON.parse(localStorage.getItem('trades')) || [];
+    trades.splice(index, 1);
+    localStorage.setItem('trades', JSON.stringify(trades));
+    
+    // Actualizar la vista
+    renderDiary();
+    
+    // Actualizar otras vistas si existen
+    if (document.getElementById('statsContainer')) {
+      renderStats();
+    }
+    if (typeof loadCardData === 'function') {
+      loadCardData();
+    }
+  }
+}
+
 function renderStats() {
+  const statsContainer = document.getElementById('statsContainer');
+  if (!statsContainer) return;
+
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
   const total = trades.length;
-  const gains = trades.filter(t => t.resultMxn > 0).reduce((sum, t) => sum + t.resultMxn, 0);
-  const lossesArray = trades.filter(t => t.resultMxn < 0).map(t => t.resultMxn);
+  const gains = trades.filter(t => parseFloat(t.resultMxn) > 0).reduce((sum, t) => sum + parseFloat(t.resultMxn), 0);
+  const lossesArray = trades.filter(t => parseFloat(t.resultMxn) < 0).map(t => parseFloat(t.resultMxn));
   const losses = lossesArray.reduce((sum, val) => sum + val, 0);
   const pnl = gains + losses;
-  const winRate = total ? (trades.filter(t => t.resultMxn > 0).length / total * 100).toFixed(2) : '0.00';
-  const best = total ? Math.max(...trades.map(t => t.resultMxn)) : 0;
+  const winRate = total ? (trades.filter(t => parseFloat(t.resultMxn) > 0).length / total * 100).toFixed(2) : '0.00';
+  const best = total ? Math.max(...trades.map(t => parseFloat(t.resultMxn))) : 0;
   const worst = lossesArray.length ? Math.min(...lossesArray) : 0;
-
-  // Calcular el uso de almacenamiento de forma más precisa
-  const jsonString = JSON.stringify(trades);
-  const storageUsed = jsonString.length * 2; // Cada carácter en UTF-16 usa 2 bytes
-  const storageUsedKB = (storageUsed / 1024).toFixed(2);
-  const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(4);
-
-  // Calcular tamaño promedio por trade y estimación de trades restantes
-  const avgSizePerTrade = total > 0 ? storageUsed / total : 0;
-  const remainingTrades5MB = Math.floor((5 * 1024 * 1024 - storageUsed) / avgSizePerTrade);
-  const remainingTrades10MB = Math.floor((10 * 1024 * 1024 - storageUsed) / avgSizePerTrade);
-
-  // Calcular estimaciones basadas en uso real
-  const tradesPerYear = 600; // Asumimos 600 trades por año
-  const yearsEstimate5MB = Math.floor(remainingTrades5MB / tradesPerYear);
-  const yearsEstimate10MB = Math.floor(remainingTrades10MB / tradesPerYear);
 
   // Función para determinar la clase y descripción de la tasa de aciertos
   const getWinRateInfo = (rate) => {
@@ -108,64 +157,39 @@ function renderStats() {
 
   const winRateInfo = getWinRateInfo(winRate);
 
-  document.getElementById('statsContainer').innerHTML = `
-    <div class="storage-info">
-      Has registrado un total de ${total} trades, lo que supone un uso de memoria de ${storageUsedKB} KB (${storageUsedMB} MB)
-      <div class="storage-limit-info">El límite de LocalStorage es aproximadamente 5-10 MB</div>
-      ${total > 0 ? `
-        <div class="storage-limit-info">
-          En base a un límite de 5MB y el tamaño promedio del registro (${(avgSizePerTrade / 1024).toFixed(2)} KB por trade), 
-          se estima que esa capacidad te permita registrar un restante de ${remainingTrades5MB.toLocaleString()} trades.
-        </div>
-        <div class="storage-limit-info">
-          Si el límite fuera de 10MB, podrías registrar aproximadamente ${remainingTrades10MB.toLocaleString()} trades adicionales.
-        </div>
-        <div class="storage-capacity-info">
-          <strong>Capacidad a largo plazo:</strong>
-          <ul>
-            <li>Con el límite de 5MB: Podrías registrar aproximadamente ${yearsEstimate5MB} años más de operaciones (asumiendo ${tradesPerYear} trades por año)</li>
-            <li>Con el límite de 10MB: Podrías registrar aproximadamente ${yearsEstimate10MB} años más de operaciones</li>
-          </ul>
-        </div>
-      ` : ''}
+  statsContainer.innerHTML = `
+    <div style="margin-top: 20px;">
+      <div>1. Trades Totales: ${total}</div>
+      <div>2. Ganancia Total: <span class="${gains >= 0 ? 'positive' : 'negative'}">${gains.toFixed(2)} MXN</span></div>
+      <div>3. Acumulado de Pérdidas: <span class="${losses >= 0 ? 'positive' : 'negative'}">${losses.toFixed(2)} MXN</span></div>
+      <div>4. P&L Neto: <span class="${pnl >= 0 ? 'positive' : 'negative'}">${pnl.toFixed(2)} MXN</span></div>
+      <div>5. Tasa de Aciertos: <span class="${winRateInfo.class}">${winRate}%</span> | <span class="winrate-legend">Tienes una <span class="${winRateInfo.class}">${winRateInfo.desc}</span> tasa de aciertos</span></div>
+      <div>6. Mejor Trade: ${best.toFixed(2)} MXN</div>
+      <div>7. Peor Trade: ${worst.toFixed(2)} MXN</div>
     </div>
-    <div>1. Trades Totales: ${total}</div>
-    <div>2. Ganancia Total: <span class="${gains >= 0 ? 'positive' : 'negative'}">${gains.toFixed(2)} MXN</span></div>
-    <div>3. Acumulado de Pérdidas: <span class="${losses >= 0 ? 'positive' : 'negative'}">${losses.toFixed(2)} MXN</span></div>
-    <div>4. P&L Neto: <span class="${pnl >= 0 ? 'positive' : 'negative'}">${pnl.toFixed(2)} MXN</span></div>
-    <div>5. Tasa de Aciertos: <span class="${winRateInfo.class}">${winRate}%</span> | <span class="winrate-legend">Tienes una <span class="${winRateInfo.class}">${winRateInfo.desc}</span> tasa de aciertos</span></div>
-    <div>6. Mejor Trade: ${best.toFixed(2)} MXN</div>
-    <div>7. Peor Trade: ${worst.toFixed(2)} MXN</div>
   `;
 }
 
 function saveData() {
-  if (!trades.length) { 
-    alert('No hay datos para guardar.'); 
-    return; 
-  }
-  const data = JSON.stringify(trades);
-  localStorage.setItem('trades', data);
-  alert('✅ Los datos han sido guardados exitosamente en el almacenamiento local del navegador.\n\nLos datos permanecerán disponibles incluso después de cerrar el navegador.');
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  localStorage.setItem('trades', JSON.stringify(trades));
+  alert('Datos guardados correctamente');
 }
 
 function clearData() {
-  if (confirm('⚠️ ¿Estás seguro que deseas eliminar todos los datos guardados?\n\nEsta acción no se puede deshacer.')) {
-    trades = [];
+  if (confirm('¿Estás seguro de que deseas eliminar todos los datos?')) {
     localStorage.removeItem('trades');
-    renderDiary(); 
-    renderStats();
-    alert('🗑️ Todos los datos han sido eliminados exitosamente del almacenamiento local.');
+    alert('Datos eliminados correctamente');
+    location.reload();
   }
 }
 
-window.onload = function() {
-  const saved = localStorage.getItem('trades');
-  if (saved) {
-    try { 
-      trades = JSON.parse(saved); 
-    } catch (e) { 
-      trades = []; 
-    }
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.getElementById('diaryContainer')) {
+    renderDiary();
   }
-};
+  
+  if (document.getElementById('statsContainer')) {
+    renderStats();
+  }
+});
