@@ -7,36 +7,126 @@
     <title>Backtesting - Inicio</title>
 </head>
 <body>
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <div class="menu-overlay"></div>
+    <nav class="nav-menu">
+        <div class="menu-items">
+            <a href="index.html" class="active">Inicio</a>
+            <a href="registrar-trade.html">Registrar Trade</a>
+            <a href="diario.html">Diario</a>
+            <a href="estadisticas.html">Estadísticas</a>
+            <a href="plan-trading.html">Plan de Trading</a>
+            <a href="almacenamiento.html">Almacenamiento</a>
+            <a href="ajustes.html">Ajustes</a>
+        </div>
+    </nav>
+
     <div class="container">
         <div class="header">
             <h1>Backtesting Trading</h1>
             <div id="datetime" class="datetime"></div>
         </div>
 
+        <div class="capital-evolution-card" style="margin-bottom: 32px;">
+            <div class="capital-header">
+                <h2 id="welcome-message">Hola, Usuario</h2>
+                <div class="capital-balance" id="capital-balance" style="display:inline-block;">$0.00</div>
+                <span id="capital-roi" style="margin-left: 12px; font-size:1.1em; color:#00b894;"></span>
+            </div>
+            <canvas id="capitalChart" style="width:100%;max-width:600px;height:180px;"></canvas>
+            <div class="period-filters" style="margin-top: 16px; text-align: center;">
+                <button class="period-filter active" data-period="monthly">Mensual</button>
+                <button class="period-filter" data-period="yearly">Anual</button>
+                <button class="period-filter" data-period="all">Todo el tiempo</button>
+            </div>
+            <div id="capital-reset-info" style="display:none; color: #f57c00; margin-top: 8px; font-size: 0.95em;"></div>
+            <button id="reset-capital-evolution" style="display:none; margin-top: 8px; background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 16px; cursor:pointer;">Reiniciar evolución de capital</button>
+        </div>
+
         <div class="cards-container">
             <div class="card">
-                <h3>Trades del Día</h3>
-                <div id="trades-hoy" class="card-content">0</div>
-            </div>
-            <div class="card">
-                <h3>PNL del Día</h3>
-                <div id="pnl-hoy" class="card-content">$0.00</div>
-            </div>
-            <div class="card">
-                <h3>Meta Mensual</h3>
-                <div id="meta-mensual" class="card-content">$0.00</div>
+                <h3>Meta <span id="goal-period-text">Mensual</span></h3>
+                <div class="goal-progress">
+                    <div class="amounts-container">
+                        <span class="current-amount" id="current-amount">$0.00</span>
+                        <span class="separator">/</span>
+                        <span class="goal-amount" id="goal-amount">$0.00</span>
+                    </div>
+                    <div class="progress-percentage" id="progress-percentage">0%</div>
+                </div>
             </div>
         </div>
 
-        <div class="navigation-buttons">
-            <button class="nav-btn" onclick="window.location.href='registrar-trade.html'">Registrar Trade</button>
-            <button class="nav-btn" onclick="window.location.href='diario.html'">Diario</button>
-            <button class="nav-btn" onclick="window.location.href='estadisticas.html'">Estadísticas</button>
-            <button class="nav-btn" onclick="window.location.href='almacenamiento.html'">Almacenamiento</button>
-            <button class="nav-btn" onclick="window.location.href='ajustes.html'">Ajustes</button>
+        <div class="summaries-container">
+            <div class="daily-summary">
+                <h2>Resumen Diario</h2>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Operaciones Ganadas:</span>
+                        <span id="winning-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Operaciones Perdidas:</span>
+                        <span id="losing-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Empates:</span>
+                        <span id="breakeven-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">PNL:</span>
+                        <span id="daily-pnl" class="stat-value">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="daily-summary weekly-summary">
+                <h2>Resumen Semanal</h2>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Operaciones Ganadas:</span>
+                        <span id="weekly-winning-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Operaciones Perdidas:</span>
+                        <span id="weekly-losing-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Empates:</span>
+                        <span id="weekly-breakeven-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">PNL:</span>
+                        <span id="weekly-pnl" class="stat-value">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="daily-summary monthly-summary">
+                <h2>Resumen Mensual</h2>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Operaciones Ganadas:</span>
+                        <span id="monthly-winning-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Operaciones Perdidas:</span>
+                        <span id="monthly-losing-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Empates:</span>
+                        <span id="monthly-breakeven-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">PNL:</span>
+                        <span id="monthly-pnl" class="stat-value">$0.00</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="javascript.js"></script>
     <script>
         // Función para obtener una cookie
@@ -73,23 +163,136 @@
         // Cargar datos de las tarjetas
         function loadCardData() {
             const trades = JSON.parse(localStorage.getItem('trades')) || [];
-            const today = new Date().toDateString();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Establecer inicio del día
             
-            // Calcular trades del día
-            const tradesHoy = trades.filter(trade => new Date(trade.openTime).toDateString() === today).length;
-            document.getElementById('trades-hoy').textContent = tradesHoy;
+            // Filtrar trades del día actual
+            const tradesHoy = trades.filter(trade => {
+                const tradeDate = new Date(trade.openTime);
+                tradeDate.setHours(0, 0, 0, 0);
+                return tradeDate.getTime() === today.getTime();
+            });
+            
+            // Calcular estadísticas del resumen diario
+            const winningTrades = tradesHoy.filter(trade => parseFloat(trade.resultMxn) > 0).length;
+            const losingTrades = tradesHoy.filter(trade => parseFloat(trade.resultMxn) < 0).length;
+            const breakevenTrades = tradesHoy.filter(trade => parseFloat(trade.resultMxn) === 0).length;
+            const dailyPnl = tradesHoy.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
 
-            // Calcular PNL del día
-            const pnlHoy = trades
-                .filter(trade => new Date(trade.openTime).toDateString() === today)
-                .reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
-            const pnlElement = document.getElementById('pnl-hoy');
-            pnlElement.textContent = `$${pnlHoy.toFixed(2)}`;
-            pnlElement.style.color = pnlHoy >= 0 ? '#2ecc71' : '#e74c3c';
+            // Actualizar el resumen diario
+            document.getElementById('winning-trades').textContent = winningTrades;
+            document.getElementById('losing-trades').textContent = losingTrades;
+            document.getElementById('breakeven-trades').textContent = breakevenTrades;
+            
+            const dailyPnlElement = document.getElementById('daily-pnl');
+            dailyPnlElement.textContent = `$${dailyPnl.toFixed(2)}`;
+            dailyPnlElement.style.color = dailyPnl >= 0 ? '#2ecc71' : '#e74c3c';
 
-            // Cargar meta mensual desde cookie
+            // Calcular estadísticas semanales
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay()); // Inicio de la semana (domingo)
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const tradesSemana = trades.filter(trade => {
+                const tradeDate = new Date(trade.openTime);
+                tradeDate.setHours(0, 0, 0, 0);
+                return tradeDate >= startOfWeek && tradeDate <= today;
+            });
+
+            // Calcular estadísticas del resumen semanal
+            const weeklyWinningTrades = tradesSemana.filter(trade => parseFloat(trade.resultMxn) > 0).length;
+            const weeklyLosingTrades = tradesSemana.filter(trade => parseFloat(trade.resultMxn) < 0).length;
+            const weeklyBreakevenTrades = tradesSemana.filter(trade => parseFloat(trade.resultMxn) === 0).length;
+            const weeklyPnl = tradesSemana.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+            // Actualizar el resumen semanal
+            document.getElementById('weekly-winning-trades').textContent = weeklyWinningTrades;
+            document.getElementById('weekly-losing-trades').textContent = weeklyLosingTrades;
+            document.getElementById('weekly-breakeven-trades').textContent = weeklyBreakevenTrades;
+            
+            const weeklyPnlElement = document.getElementById('weekly-pnl');
+            weeklyPnlElement.textContent = `$${weeklyPnl.toFixed(2)}`;
+            weeklyPnlElement.style.color = weeklyPnl >= 0 ? '#2ecc71' : '#e74c3c';
+
+            // Calcular estadísticas mensuales
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            startOfMonth.setHours(0, 0, 0, 0);
+
+            const tradesMes = trades.filter(trade => {
+                const tradeDate = new Date(trade.openTime);
+                tradeDate.setHours(0, 0, 0, 0);
+                return tradeDate >= startOfMonth && tradeDate <= today;
+            });
+
+            // Calcular estadísticas del resumen mensual
+            const monthlyWinningTrades = tradesMes.filter(trade => parseFloat(trade.resultMxn) > 0).length;
+            const monthlyLosingTrades = tradesMes.filter(trade => parseFloat(trade.resultMxn) < 0).length;
+            const monthlyBreakevenTrades = tradesMes.filter(trade => parseFloat(trade.resultMxn) === 0).length;
+            const monthlyPnl = tradesMes.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+            // Actualizar el resumen mensual
+            document.getElementById('monthly-winning-trades').textContent = monthlyWinningTrades;
+            document.getElementById('monthly-losing-trades').textContent = monthlyLosingTrades;
+            document.getElementById('monthly-breakeven-trades').textContent = monthlyBreakevenTrades;
+            
+            const monthlyPnlElement = document.getElementById('monthly-pnl');
+            monthlyPnlElement.textContent = `$${monthlyPnl.toFixed(2)}`;
+            monthlyPnlElement.style.color = monthlyPnl >= 0 ? '#2ecc71' : '#e74c3c';
+
+            // Cargar meta y período desde cookies
             const monthlyGoal = getCookie('monthlyGoal') || '10000';
-            document.getElementById('meta-mensual').textContent = `$${parseFloat(monthlyGoal).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            const goalPeriod = getCookie('goalPeriod') || 'monthly';
+            
+            // Actualizar el texto del período
+            const periodTexts = {
+                'daily': 'Diaria',
+                'weekly': 'Semanal',
+                'monthly': 'Mensual',
+                'yearly': 'Anual'
+            };
+            document.getElementById('goal-period-text').textContent = periodTexts[goalPeriod] || 'Mensual';
+            
+            // Calcular el PNL para el período seleccionado
+            let periodStart;
+            switch(goalPeriod) {
+                case 'daily':
+                    periodStart = new Date(today.setHours(0, 0, 0, 0));
+                    break;
+                case 'weekly':
+                    periodStart = new Date(today.setDate(today.getDate() - today.getDay()));
+                    break;
+                case 'monthly':
+                    periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'yearly':
+                    periodStart = new Date(today.getFullYear(), 0, 1);
+                    break;
+                default:
+                    periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            }
+
+            const periodPNL = trades
+                .filter(trade => new Date(trade.openTime) >= periodStart)
+                .reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+            // Actualizar la visualización del progreso
+            const goalAmount = parseFloat(monthlyGoal);
+            const progressPercentage = (periodPNL / goalAmount) * 100;
+            
+            // Actualizar elementos con los valores calculados
+            const currentAmountElement = document.getElementById('current-amount');
+            const goalAmountElement = document.getElementById('goal-amount');
+            const progressElement = document.getElementById('progress-percentage');
+
+            currentAmountElement.textContent = `$${periodPNL.toFixed(2)}`;
+            goalAmountElement.textContent = `$${goalAmount.toFixed(2)}`;
+            progressElement.textContent = `${progressPercentage.toFixed(1)}%`;
+
+            // Aplicar colores según el progreso
+            currentAmountElement.style.color = periodPNL >= goalAmount ? '#2e7d32' : '#f57c00';
+            currentAmountElement.style.fontWeight = 'bold';
+            goalAmountElement.style.color = '#2e7d32';
+            progressElement.style.color = '#FF6B00';
         }
 
         // Cargar tema guardado
@@ -98,9 +301,60 @@
             document.body.className = theme;
         }
 
+        // Funciones para el menú de navegación
+        const navMenu = document.querySelector('.nav-menu');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const menuOverlay = document.querySelector('.menu-overlay');
+        let scrollPosition = 0;
+
+        function toggleMenu() {
+            const isVisible = navMenu.classList.contains('visible');
+            
+            if (!isVisible) {
+                // Guardar posición del scroll
+                scrollPosition = window.pageYOffset;
+                // Bloquear scroll
+                document.body.classList.add('menu-open');
+                document.body.style.top = `-${scrollPosition}px`;
+                // Mostrar overlay
+                menuOverlay.classList.add('visible');
+            } else {
+                // Restaurar scroll
+                document.body.classList.remove('menu-open');
+                document.body.style.top = '';
+                window.scrollTo(0, scrollPosition);
+                // Ocultar overlay
+                menuOverlay.classList.remove('visible');
+            }
+            
+            navMenu.classList.toggle('visible');
+        }
+
+        // Cerrar menú al hacer clic en un enlace
+        document.querySelectorAll('.menu-items a').forEach(link => {
+            link.addEventListener('click', () => {
+                // Solo navegar a la nueva página, no cerrar el menú
+                // El menú se cerrará automáticamente al cargar la nueva página
+            });
+        });
+
+        // Marcar enlace activo según la página actual
+        function setActiveLink() {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const links = document.querySelectorAll('.menu-items a');
+            
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === currentPage) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
         // Cargar datos al iniciar
         loadTheme();
         loadCardData();
+        setActiveLink();
     </script>
 </body>
 </html>
