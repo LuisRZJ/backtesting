@@ -77,40 +77,135 @@ function renderDiary() {
     return;
   }
 
-  trades.slice().reverse().forEach((trade, index) => {
-    const tradeCard = document.createElement('div');
-    tradeCard.className = `trade-card ${parseFloat(trade.resultMxn) >= 0 ? 'gain' : 'loss'}`;
-    
-    // Calcular el índice real en el array original (no invertido)
-    const realIndex = trades.length - 1 - index;
-    
-    // Formatear el par de divisas
-    const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
-    
-    // Traducir la dirección
-    const direction = trade.direction === 'long' ? 'Compra' : 'Venta';
-    
-    tradeCard.innerHTML = `
-      <div class="trade-header">
-        <h3>${formattedAsset} - ${direction}</h3>
-        <button class="btn-delete" onclick="deleteTrade(${realIndex})" title="Eliminar trade">
-          <span class="delete-icon">×</span>
-        </button>
-      </div>
-      <div class="trade-body">
-        <p>Resultado: ${parseFloat(trade.resultMxn).toFixed(2)} MXN</p>
-        <p>Lotes: ${trade.lots}</p>
-        <p>Apertura: ${new Date(trade.openTime).toLocaleString()}</p>
-        <p>Cierre: ${new Date(trade.closeTime).toLocaleString()}</p>
-        <p>Precio de Apertura: ${trade.openPrice}</p>
-        <p>Precio de Cierre: ${trade.closePrice}</p>
-        <p>Estrategia: ${trade.strategy}</p>
-        ${trade.notes ? `<p>Notas: ${trade.notes}</p>` : ''}
-      </div>
-    `;
-    
-    diaryContainer.appendChild(tradeCard);
+  // Agrupar trades por fecha de cierre (local, YYYY-MM-DD)
+  const tradesByDate = {};
+  trades.forEach(trade => {
+    const closeDate = new Date(trade.closeTime);
+    // Obtener fecha local en formato YYYY-MM-DD
+    const dateKey = closeDate.getFullYear() + '-' + String(closeDate.getMonth() + 1).padStart(2, '0') + '-' + String(closeDate.getDate()).padStart(2, '0');
+    if (!tradesByDate[dateKey]) tradesByDate[dateKey] = [];
+    tradesByDate[dateKey].push(trade);
   });
+
+  // Ordenar fechas de más reciente a más antigua
+  const sortedDates = Object.keys(tradesByDate).sort((a, b) => b.localeCompare(a));
+
+  sortedDates.forEach(dateKey => {
+    // Usar la fecha local del primer trade del grupo para el separador
+    const firstTrade = tradesByDate[dateKey][0];
+    const dateObj = new Date(firstTrade.closeTime);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const dateStr = dateObj.toLocaleDateString('es-ES', options);
+    const separator = document.createElement('div');
+    separator.className = 'trade-day-separator';
+    separator.innerHTML = `<hr class='trade-day-hr'><div class='trade-day-label'>${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div>`;
+    diaryContainer.appendChild(separator);
+
+    // Mostrar los trades de ese día (más recientes primero)
+    tradesByDate[dateKey].slice().reverse().forEach((trade, index) => {
+      const tradeCard = document.createElement('div');
+      tradeCard.className = `trade-card custom-trade-card ${parseFloat(trade.resultMxn) >= 0 ? 'gain' : 'loss'}`;
+
+      // Calcular el índice real en el array original (no invertido)
+      const realIndex = trades.length - 1 - trades.findIndex(t => t === trade);
+
+      // Formatear el par de divisas
+      const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+
+      // Traducir la dirección y asignar color
+      const isCompra = trade.direction === 'long';
+      const direction = isCompra ? 'COMPRA' : 'VENTA';
+      const directionClass = isCompra ? 'trade-direction-compra' : 'trade-direction-venta';
+
+      // Formatear fecha y hora de cierre
+      const closeDate = new Date(trade.closeTime);
+      const closeDateStr = closeDate.toLocaleDateString('es-ES', { year: '2-digit', month: '2-digit', day: '2-digit' });
+      const closeTimeStr = closeDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+      // Formatear fecha y hora de apertura
+      const openDate = new Date(trade.openTime);
+      const openDateStr = openDate.toLocaleDateString('es-ES', { year: '2-digit', month: '2-digit', day: '2-digit' });
+      const openTimeStr = openDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+      tradeCard.innerHTML = `
+        <div class="trade-row trade-date-row">
+          <span class="trade-date">${closeDateStr} | ${closeTimeStr}</span>
+        </div>
+        <div class="trade-row trade-asset-row">
+          <span class="trade-asset">${formattedAsset}</span>
+          <span class="trade-direction ${directionClass}">${direction}</span>
+        </div>
+        <div class="trade-row trade-details-row">
+          <span class="trade-lots">${parseFloat(trade.lots).toFixed(3)}</span>
+          <span class="trade-prices">${trade.openPrice} - ${trade.closePrice}</span>
+        </div>
+        <div class="trade-row trade-result-row">
+          <span class="trade-result ${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">
+            ${parseFloat(trade.resultMxn) >= 0 ? '+' : ''}${parseFloat(trade.resultMxn).toFixed(2)} MXN
+          </span>
+          <button class="btn-details" title="Ver detalles">🔍</button>
+          <button class="btn-delete" onclick="deleteTrade(${realIndex})" title="Eliminar trade">
+            <span class="delete-icon">×</span>
+          </button>
+        </div>
+      `;
+
+      // Evento para mostrar detalles
+      tradeCard.querySelector('.btn-details').onclick = function() {
+        showTradeDetails(trade);
+      };
+
+      diaryContainer.appendChild(tradeCard);
+    });
+  });
+}
+
+function showTradeDetails(trade) {
+  // Si ya existe un modal, eliminarlo primero
+  const oldModal = document.getElementById('trade-details-modal');
+  if (oldModal) oldModal.remove();
+
+  // Formatear datos
+  const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+  const isCompra = trade.direction === 'long';
+  const direction = isCompra ? 'COMPRA' : 'VENTA';
+  const directionClass = isCompra ? 'trade-direction-compra' : 'trade-direction-venta';
+  const closeDate = new Date(trade.closeTime);
+  const closeDateStr = closeDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+  const closeTimeStr = closeDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const openDate = new Date(trade.openTime);
+  const openDateStr = openDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+  const openTimeStr = openDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+  // Crear modal
+  const modal = document.createElement('div');
+  modal.id = 'trade-details-modal';
+  modal.className = 'trade-details-modal-bg';
+  modal.innerHTML = `
+    <div class="trade-details-modal-card">
+      <button class="trade-details-close" title="Cerrar">&times;</button>
+      <h2>Detalles de la Operación</h2>
+      <div class="trade-details-list">
+        <div><strong>Activo:</strong> <span>${formattedAsset}</span></div>
+        <div><strong>Dirección:</strong> <span class="${directionClass}">${direction}</span></div>
+        <div><strong>Lotes:</strong> <span>${parseFloat(trade.lots).toFixed(3)}</span></div>
+        <div><strong>Resultado:</strong> <span class="${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">${parseFloat(trade.resultMxn) >= 0 ? '+' : ''}${parseFloat(trade.resultMxn).toFixed(2)} MXN</span></div>
+        <div><strong>Fecha de Apertura:</strong> <span>${openDateStr} | ${openTimeStr}</span></div>
+        <div><strong>Fecha de Cierre:</strong> <span>${closeDateStr} | ${closeTimeStr}</span></div>
+        <div><strong>Precio de Entrada:</strong> <span>${trade.openPrice}</span></div>
+        <div><strong>Precio de Salida:</strong> <span>${trade.closePrice}</span></div>
+        <div><strong>Estrategia:</strong> <span>${trade.strategy}</span></div>
+        <div style='align-items: flex-start;'><strong>Notas:</strong> <span class='trade-details-list-notes'>${trade.notes ? trade.notes : '-'}</span></div>
+      </div>
+    </div>
+  `;
+
+  // Evento de cierre
+  modal.querySelector('.trade-details-close').onclick = function() {
+    modal.remove();
+  };
+
+  document.body.appendChild(modal);
 }
 
 function deleteTrade(index) {
@@ -278,4 +373,301 @@ document.addEventListener('DOMContentLoaded', function() {
   if (document.getElementById('statsContainer')) {
     renderStats();
   }
+});
+
+// === EVOLUCIÓN DE CAPITAL Y SALDO ACTUAL ===
+
+function loadCapitalEvolution() {
+    const username = localStorage.getItem('username') || 'Usuario';
+    const welcomeMessage = document.getElementById('welcome-message');
+    if (welcomeMessage) welcomeMessage.textContent = `Hola, ${username}`;
+
+    // Leer capital inicial y fecha de registro
+    let initialCapital = parseFloat(localStorage.getItem('initialCapital') || '0');
+    let capitalStartDate = localStorage.getItem('capitalStartDate');
+    let trades = JSON.parse(localStorage.getItem('trades')) || [];
+
+    // Si no hay capital inicial, ocultar el módulo
+    const card = document.querySelector('.capital-evolution-card');
+    if (!initialCapital || initialCapital <= 0) {
+        if (card) card.style.display = 'none';
+        return;
+    } else {
+        if (card) card.style.display = '';
+    }
+
+    // Si no hay fecha de inicio, usar la fecha de la primera operación posterior al capital inicial
+    if (!capitalStartDate) {
+        // Buscar la primera operación registrada
+        if (trades.length > 0) {
+            const firstTrade = trades.reduce((min, t) => new Date(t.openTime) < new Date(min.openTime) ? t : min, trades[0]);
+            capitalStartDate = firstTrade.openTime;
+            localStorage.setItem('capitalStartDate', capitalStartDate);
+        } else {
+            // No hay operaciones, usar hoy
+            capitalStartDate = new Date().toISOString();
+            localStorage.setItem('capitalStartDate', capitalStartDate);
+        }
+    }
+
+    // Filtrar operaciones desde la fecha de inicio
+    const startDate = new Date(capitalStartDate);
+    const tradesAfterStart = trades
+        .filter(trade => new Date(trade.openTime) >= startDate)
+        .sort((a, b) => new Date(a.openTime) - new Date(b.openTime));
+
+    // Construir la evolución del capital
+    let capitalHistory = [{
+        date: startDate,
+        value: initialCapital
+    }];
+    let currentCapital = initialCapital;
+    tradesAfterStart.forEach(trade => {
+        currentCapital += parseFloat(trade.resultMxn);
+        capitalHistory.push({
+            date: new Date(trade.openTime),
+            value: currentCapital
+        });
+    });
+
+    // Mostrar saldo actual y ROI
+    const balanceElement = document.getElementById('capital-balance');
+    const roiElement = document.getElementById('capital-roi');
+    const ganancia = currentCapital - initialCapital;
+    const roi = initialCapital > 0 ? (ganancia / initialCapital) * 100 : 0;
+    if (balanceElement) {
+        balanceElement.textContent = `$${currentCapital.toFixed(2)}`;
+        balanceElement.style.color = currentCapital >= initialCapital ? '#2ecc71' : '#e74c3c';
+        balanceElement.style.fontWeight = 'bold';
+        balanceElement.style.fontSize = '2.2em';
+    }
+    if (roiElement) {
+        roiElement.textContent = `${ganancia >= 0 ? '+' : ''}$${ganancia.toFixed(2)} | ROI: ${roi >= 0 ? '' : '-'}${Math.abs(roi).toFixed(0)}%`;
+        roiElement.style.color = roi >= 0 ? '#00b894' : '#e74c3c';
+        roiElement.style.fontWeight = 'bold';
+    }
+
+    // Dibujar gráfico con Chart.js
+    const ctx = document.getElementById('capitalChart').getContext('2d');
+    if (window.capitalChartInstance) {
+        window.capitalChartInstance.destroy();
+    }
+    window.capitalChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: capitalHistory.map(p => p.date.toLocaleDateString('es-ES', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })),
+            datasets: [{
+                label: 'Evolución del Capital',
+                data: capitalHistory.map(p => p.value),
+                borderColor: '#1de9b6',
+                backgroundColor: 'rgba(29,233,182,0.08)',
+                tension: 0.3,
+                pointRadius: 2,
+                fill: true,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: true, beginAtZero: false }
+            }
+        }
+    });
+
+    // --- Gestión de cambios y reseteo ---
+    // Detectar si el usuario cambió el capital inicial después de registrar operaciones
+    const lastCapitalSet = localStorage.getItem('lastCapitalSet');
+    const capitalInput = document.getElementById('initial-capital');
+    const resetBtn = document.getElementById('reset-capital-evolution');
+    const infoMsg = document.getElementById('capital-reset-info');
+
+    // Mostrar advertencia si el capital inicial fue cambiado después de registrar operaciones
+    let showReset = false;
+    if (lastCapitalSet && trades.length > 0) {
+        const lastSetDate = new Date(lastCapitalSet);
+        const firstTradeAfter = trades.some(trade => new Date(trade.openTime) > lastSetDate);
+        if (firstTradeAfter) {
+            showReset = true;
+        }
+    }
+    if (showReset && infoMsg && resetBtn) {
+        infoMsg.style.display = '';
+        infoMsg.textContent = 'Has modificado el capital inicial después de registrar operaciones. Para evitar inconsistencias, puedes reiniciar la evolución del capital.';
+        resetBtn.style.display = '';
+        resetBtn.onclick = function() {
+            if (confirm('¿Seguro que deseas reiniciar la evolución del capital? Esto usará el capital inicial actual y solo contará las operaciones nuevas a partir de ahora.')) {
+                localStorage.setItem('capitalStartDate', new Date().toISOString());
+                loadCapitalEvolution();
+            }
+        };
+    } else if (infoMsg && resetBtn) {
+        infoMsg.style.display = 'none';
+        resetBtn.style.display = 'none';
+    }
+}
+
+// Guardar la fecha/hora cada vez que el usuario cambia el capital inicial (en ajustes.html)
+if (window.location.pathname.endsWith('ajustes.html')) {
+    const saveCapitalBtn = document.getElementById('save-capital');
+    if (saveCapitalBtn) {
+        saveCapitalBtn.addEventListener('click', function() {
+            localStorage.setItem('lastCapitalSet', new Date().toISOString());
+        });
+    }
+}
+
+// Ejecutar en la página de inicio
+if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || window.location.pathname === '') {
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCapitalEvolution();
+    });
+}
+
+// Función para filtrar datos por período
+function filterCapitalData(period) {
+    const trades = JSON.parse(localStorage.getItem('trades')) || [];
+    const today = new Date();
+    let startDate;
+
+    switch(period) {
+        case 'monthly':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case 'yearly':
+            startDate = new Date(today.getFullYear(), 0, 1);
+            break;
+        case 'all':
+            startDate = new Date(0); // Fecha inicial
+            break;
+        default:
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    }
+
+    return trades.filter(trade => new Date(trade.openTime) >= startDate);
+}
+
+// Función para actualizar el gráfico con el período seleccionado
+function updateCapitalChart(period) {
+    const username = localStorage.getItem('username') || 'Usuario';
+    const welcomeMessage = document.getElementById('welcome-message');
+    if (welcomeMessage) welcomeMessage.textContent = `Hola, ${username}`;
+
+    // Leer capital inicial y fecha de registro
+    let initialCapital = parseFloat(localStorage.getItem('initialCapital') || '0');
+    let capitalStartDate = localStorage.getItem('capitalStartDate');
+    let trades = JSON.parse(localStorage.getItem('trades')) || [];
+
+    // Si no hay capital inicial, ocultar el módulo
+    const card = document.querySelector('.capital-evolution-card');
+    if (!initialCapital || initialCapital <= 0) {
+        if (card) card.style.display = 'none';
+        return;
+    } else {
+        if (card) card.style.display = '';
+    }
+
+    // Filtrar operaciones según el período seleccionado
+    const today = new Date();
+    let startDate;
+
+    switch(period) {
+        case 'monthly':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case 'yearly':
+            startDate = new Date(today.getFullYear(), 0, 1);
+            break;
+        case 'all':
+            startDate = new Date(0); // Fecha inicial
+            break;
+        default:
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    }
+
+    // Filtrar operaciones desde la fecha de inicio del período seleccionado
+    const tradesAfterStart = trades
+        .filter(trade => new Date(trade.openTime) >= startDate)
+        .sort((a, b) => new Date(a.openTime) - new Date(b.openTime));
+
+    // Construir la evolución del capital
+    let capitalHistory = [{
+        date: startDate,
+        value: initialCapital
+    }];
+    let currentCapital = initialCapital;
+    tradesAfterStart.forEach(trade => {
+        currentCapital += parseFloat(trade.resultMxn);
+        capitalHistory.push({
+            date: new Date(trade.openTime),
+            value: currentCapital
+        });
+    });
+
+    // Mostrar saldo actual y ROI
+    const balanceElement = document.getElementById('capital-balance');
+    const roiElement = document.getElementById('capital-roi');
+    const ganancia = currentCapital - initialCapital;
+    const roi = initialCapital > 0 ? (ganancia / initialCapital) * 100 : 0;
+    if (balanceElement) {
+        balanceElement.textContent = `$${currentCapital.toFixed(2)}`;
+        balanceElement.style.color = currentCapital >= initialCapital ? '#2ecc71' : '#e74c3c';
+        balanceElement.style.fontWeight = 'bold';
+        balanceElement.style.fontSize = '2.2em';
+    }
+    if (roiElement) {
+        roiElement.textContent = `${ganancia >= 0 ? '+' : ''}$${ganancia.toFixed(2)} | ROI: ${roi >= 0 ? '' : '-'}${Math.abs(roi).toFixed(0)}%`;
+        roiElement.style.color = roi >= 0 ? '#00b894' : '#e74c3c';
+        roiElement.style.fontWeight = 'bold';
+    }
+
+    // Actualizar el gráfico
+    const ctx = document.getElementById('capitalChart').getContext('2d');
+    if (window.capitalChartInstance) {
+        window.capitalChartInstance.destroy();
+    }
+    window.capitalChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: capitalHistory.map(p => p.date.toLocaleDateString('es-ES', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })),
+            datasets: [{
+                label: 'Evolución del Capital',
+                data: capitalHistory.map(p => p.value),
+                borderColor: '#1de9b6',
+                backgroundColor: 'rgba(29,233,182,0.08)',
+                tension: 0.3,
+                pointRadius: 2,
+                fill: true,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: true, beginAtZero: false }
+            }
+        }
+    });
+}
+
+// Agregar event listeners para los botones de filtro
+document.addEventListener('DOMContentLoaded', function() {
+    const periodFilters = document.querySelectorAll('.period-filter');
+    
+    periodFilters.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remover clase active de todos los botones
+            periodFilters.forEach(btn => btn.classList.remove('active'));
+            // Agregar clase active al botón clickeado
+            this.classList.add('active');
+            // Actualizar el gráfico con el período seleccionado
+            updateCapitalChart(this.dataset.period);
+        });
+    });
 });
