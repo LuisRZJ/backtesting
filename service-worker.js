@@ -5,8 +5,8 @@ const urlsToCache = [
   './estilos.css',
   './javascript.js',
   './manifest.json',
-  './icon-192x192.png',
-  './icon-512x512.png'
+  './Logo_app_trading-removebg-preview.png',
+  './almacenamiento.html'
 ];
 
 self.addEventListener('install', event => {
