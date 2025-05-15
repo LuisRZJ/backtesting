@@ -1593,3 +1593,40 @@ body.dark .trade-details-list-notes {
     color: white;
     border-color: #007bff;
 }
+
+/* --- Capital Evolution Chart Scrollable Container --- */
+.capital-evolution-card {
+    max-width: 650px;
+    margin: 0 auto 32px auto;
+    background: var(--card-background);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    padding: 24px 18px 18px 18px;
+    position: relative;
+    /* Nuevo: altura fija y scroll vertical para el gráfico */
+    height: 340px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* El canvas del gráfico puede ser más alto que el contenedor */
+#capitalChart {
+    min-height: 400px;
+    height: 400px !important;
+    max-width: 100%;
+    display: block;
+    margin: 0 auto 12px auto;
+}
+
+@media (max-width: 700px) {
+    .capital-evolution-card {
+        height: 260px;
+        padding: 10px 2vw 10px 2vw;
+    }
+    #capitalChart {
+        min-height: 260px;
+        height: 260px !important;
+    }
+}
