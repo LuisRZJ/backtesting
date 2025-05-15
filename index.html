@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Backtesting - Inicio</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
 </head>
+
 <body>
     <button class="menu-toggle" onclick="toggleMenu()">☰</button>
     <div class="menu-overlay"></div>
@@ -33,7 +37,10 @@
                 <div class="capital-balance" id="capital-balance" style="display:inline-block;">$0.00</div>
                 <span id="capital-roi" style="margin-left: 12px; font-size:1.1em; color:#00b894;"></span>
             </div>
-            <canvas id="capitalChart" style="width:100%;max-width:600px;height:180px;"></canvas>
+            <!-- 3 gráficos independientes -->
+            <canvas id="capitalChart-monthly" class="capitalChartCanvas" style="width:100%;max-width:600px;height:180px;"></canvas>
+            <canvas id="capitalChart-yearly" class="capitalChartCanvas" style="width:100%;max-width:600px;height:180px;display:none;"></canvas>
+            <canvas id="capitalChart-all" class="capitalChartCanvas" style="width:100%;max-width:600px;height:180px;display:none;"></canvas>
             <div class="period-filters" style="margin-top: 16px; text-align: center;">
                 <button class="period-filter active" data-period="monthly">Mensual</button>
                 <button class="period-filter" data-period="yearly">Anual</button>
