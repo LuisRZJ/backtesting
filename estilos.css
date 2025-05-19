@@ -1594,39 +1594,332 @@ body.dark .trade-details-list-notes {
     border-color: #007bff;
 }
 
-/* --- Capital Evolution Chart Scrollable Container --- */
-.capital-evolution-card {
-    max-width: 650px;
-    margin: 0 auto 32px auto;
+/* === ESTILOS MEJORADOS Y VISIBLES PARA TABLA DE TRADES === */
+.trades-table {
+    width: 100% !important;
+    min-width: 1200px !important;
+    max-width: none !important;
+    background: linear-gradient(135deg, #fff7f0 0%, #ffe0c2 100%) !important;
+    font-family: 'Segoe UI', 'Arial', sans-serif !important;
+    font-size: 1.07em !important;
+    box-shadow: 0 6px 32px rgba(255,107,0,0.10), 0 1.5px 0 #ffb26b inset !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    letter-spacing: 0.01em !important;
+    table-layout: auto !important;
+    border: 2.5px solid #FF6B00 !important;
+}
+#tableContainer {
+    overflow-x: auto !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+}
+.trades-table thead {
+    background: linear-gradient(90deg, var(--primary-color) 80%, #ffb26b 100%) !important;
+    color: #fff !important;
+}
+.trades-table th, .trades-table td {
+    padding: 15px 16px !important;
+    text-align: center !important;
+    border-bottom: 1.5px solid var(--border-color) !important;
+    border-right: 1.5px solid var(--border-color) !important;
+    transition: background 0.18s, color 0.18s !important;
+    background: transparent !important;
+}
+.trades-table td:first-child, .trades-table th:first-child {
+    min-width: 120px !important;
+    max-width: 200px !important;
+    width: 160px !important;
+    white-space: nowrap !important;
+}
+.trades-table th:last-child, .trades-table td:last-child {
+    border-right: none !important;
+}
+.trades-table th {
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    font-size: 1.13em !important;
+    border-bottom: 2.5px solid var(--primary-color) !important;
+    background: none !important;
+}
+.trades-table tbody tr {
+    transition: background 0.18s, box-shadow 0.18s !important;
+}
+.trades-table tbody tr:nth-child(even) {
+    background: #fff3e0 !important;
+}
+.trades-table tbody tr:nth-child(odd) {
+    background: #fff7f0 !important;
+}
+.trades-table tbody tr:hover {
+    background: #ffe0c2 !important;
+    box-shadow: 0 2px 8px rgba(255,107,0,0.07) !important;
+}
+.trades-table td {
+    font-size: 1em !important;
+    color: var(--text-color) !important;
+    vertical-align: middle !important;
+    background: none !important;
+}
+.trades-table td.positive {
+    color: #2e7d32 !important;
+    font-weight: bold !important;
+    background: #e8f5e9 !important;
+    border-radius: 6px !important;
+}
+.trades-table td.negative {
+    color: #c62828 !important;
+    font-weight: bold !important;
+    background: #ffebee !important;
+    border-radius: 6px !important;
+}
+.trades-table td.trade-direction-compra {
+    color: #2e7d32 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.03em !important;
+}
+.trades-table td.trade-direction-venta {
+    color: #c62828 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.03em !important;
+}
+.trades-table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+.trades-table td {
+    word-break: break-word !important;
+    max-width: 180px !important;
+}
+.trades-table td:last-child {
+    max-width: 260px !important;
+}
+@media (max-width: 900px) {
+    .trades-table th, .trades-table td {
+        padding: 9px 5px !important;
+        font-size: 0.98em !important;
+    }
+    .trades-table td, .trades-table th {
+        max-width: 110px !important;
+    }
+}
+@media (max-width: 600px) {
+    .trades-table th, .trades-table td {
+        padding: 6px 2px !important;
+        font-size: 0.93em !important;
+    }
+    .trades-table {
+        font-size: 0.95em !important;
+    }
+}
+
+body.dark .trades-table {
+    background: linear-gradient(135deg, #2d2d2d 0%, #3a2a1a 100%) !important;
+    color: var(--text-color) !important;
+    border: 2.5px solid var(--primary-color) !important;
+}
+body.dark .trades-table thead {
+    background: linear-gradient(90deg, var(--primary-color) 80%, #ffb26b 100%) !important;
+    color: #fff !important;
+}
+body.dark .trades-table td {
+    color: var(--text-color) !important;
+}
+body.dark .trades-table tbody tr:nth-child(even) {
+    background: #2d2d2d !important;
+}
+body.dark .trades-table tbody tr:nth-child(odd) {
+    background: #232323 !important;
+}
+body.dark .trades-table tbody tr:hover {
+    background: #3a2a1a !important;
+}
+body.dark .trades-table td.positive {
+    color: #4caf50 !important;
+    background: #1b2e1b !important;
+}
+body.dark .trades-table td.negative {
+    color: #ef5350 !important;
+    background: #2d1b1b !important;
+}
+body.dark .trades-table td.trade-direction-compra {
+    color: #4caf50 !important;
+}
+body.dark .trades-table td.trade-direction-venta {
+    color: #ef5350 !important;
+}
+
+.annual-summary h2 {
+    color: #f57c00;
+    border-bottom-color: #f57c00;
+}
+
+#annual-winning-trades {
+    color: #2e7d32;
+}
+#annual-losing-trades {
+    color: #c62828;
+}
+#annual-breakeven-trades {
+    color: #f57c00;
+}
+#annual-pnl {
+    color: #f57c00;
+}
+
+body.dark #annual-winning-trades {
+    color: #4caf50;
+}
+body.dark #annual-losing-trades {
+    color: #ef5350;
+}
+body.dark #annual-breakeven-trades {
+    color: #ffb74d;
+}
+body.dark #annual-pnl {
+    color: #ffb74d;
+}
+
+.custom-trade-card .btn-edit {
+  font-size: 1.3em;
+  color: #1565c0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+.custom-trade-card .btn-edit:hover {
+  background: #e3f2fd;
+}
+
+.trade-details-list input,
+.trade-details-list select,
+.trade-details-list textarea {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1em;
+  background: #fafbfc;
+  color: #222;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-left: 10px;
+  box-sizing: border-box;
+}
+.trade-details-list input:focus,
+.trade-details-list select:focus,
+.trade-details-list textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,107,0,0.08);
+}
+body.dark .trade-details-list input,
+body.dark .trade-details-list select,
+body.dark .trade-details-list textarea {
+  background: #23272b;
+  color: #f1f1f1;
+  border: 1.5px solid #444;
+}
+body.dark .trade-details-list input:focus,
+body.dark .trade-details-list select:focus,
+body.dark .trade-details-list textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(255,143,0,0.10);
+}
+
+/* Card moderna para capital */
+.modern-card {
     background: var(--card-background);
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    padding: 24px 18px 18px 18px;
-    position: relative;
-    /* Nuevo: altura fija y scroll vertical para el gráfico */
-    height: 340px;
-    overflow-y: auto;
+    border: 1.5px solid var(--primary-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    padding: 32px 24px 24px 24px;
+    margin-bottom: 32px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    align-items: center;
+    transition: box-shadow 0.2s;
+}
+.modern-card .capital-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 18px;
+}
+.modern-card #welcome-message {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--primary-color);
+}
+.modern-card #capital-balance {
+    font-size: 2.3em;
+    font-weight: bold;
+    color: #2ecc71;
+    margin-bottom: 2px;
+}
+.modern-card #capital-roi {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #00b894;
+    margin-bottom: 8px;
+}
+.modern-card .period-filters.integrated {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    justify-content: center;
+}
+.modern-card .period-filter {
+    background: #fff;
+    color: var(--primary-color);
+    border: 1.5px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 7px 22px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(255,107,0,0.08);
+}
+.modern-card .period-filter.active, .modern-card .period-filter:focus {
+    background: var(--primary-color);
+    color: #fff;
+    border: 1.5px solid var(--primary-color);
+    outline: none;
+}
+.modern-card .period-filter:hover:not(.active) {
+    background: var(--primary-color);
+    color: #fff;
+}
+@media (max-width: 600px) {
+    .modern-card {
+        padding: 18px 6px 16px 6px;
+    }
+    .modern-card #capital-balance {
+        font-size: 1.5em;
+    }
+    .modern-card .period-filter {
+        font-size: 0.95em;
+        padding: 6px 10px;
+    }
 }
 
-/* El canvas del gráfico puede ser más alto que el contenedor */
-#capitalChart {
-    min-height: 400px;
-    height: 400px !important;
-    max-width: 100%;
-    display: block;
-    margin: 0 auto 12px auto;
+body.dark .modern-card .period-filter {
+    background: var(--card-background);
+    color: var(--primary-color);
+    border: 1.5px solid var(--primary-color);
 }
-
-@media (max-width: 700px) {
-    .capital-evolution-card {
-        height: 260px;
-        padding: 10px 2vw 10px 2vw;
-    }
-    #capitalChart {
-        min-height: 260px;
-        height: 260px !important;
-    }
+body.dark .modern-card .period-filter.active, 
+body.dark .modern-card .period-filter:focus {
+    background: var(--primary-color);
+    color: #fff;
+    border: 1.5px solid var(--primary-color);
+}
+body.dark .modern-card .period-filter:hover:not(.active) {
+    background: var(--primary-color);
+    color: #fff;
 }
