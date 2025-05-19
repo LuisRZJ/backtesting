@@ -26,11 +26,12 @@ function addTrade() {
     openPrice: document.getElementById('openPrice').value,
     closePrice: document.getElementById('closePrice').value,
     strategy: document.getElementById('strategy').value,
-    notes: document.getElementById('notes').value
+    notes: document.getElementById('notes').value,
+    pips: document.getElementById('pips').value
   };
 
   if (!trade.asset || !trade.resultMxn || !trade.lots || !trade.direction || 
-      !trade.openTime || !trade.closeTime || !trade.openPrice || !trade.closePrice) {
+      !trade.openTime || !trade.closeTime || !trade.openPrice || !trade.closePrice || !trade.pips) {
     alert('Por favor, completa todos los campos requeridos');
     return;
   }
@@ -46,6 +47,7 @@ function addTrade() {
   document.getElementById('openPrice').value = '';
   document.getElementById('closePrice').value = '';
   document.getElementById('notes').value = '';
+  document.getElementById('pips').value = '';
 
   alert('Trade agregado correctamente');
   
@@ -60,8 +62,56 @@ function addTrade() {
   }
 }
 
+// --- Corregir renderizado de pips en tabla de trades ---
+function renderTradesTable() {
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  const tableContainer = document.getElementById('tableContainer');
+  if (trades.length === 0) {
+    tableContainer.innerHTML = '<p>No hay trades registrados aún.</p>';
+    return;
+  }
+  let html = '<div style="overflow-x:auto;">';
+  html += '<table class="trades-table">';
+  html += '<thead><tr>' +
+      '<th>Activo</th>' +
+      '<th>Dirección</th>' +
+      '<th>Lotes</th>' +
+      '<th>Resultado (MXN)</th>' +
+      '<th>Resultado (Pips)</th>' +
+      '<th>Fecha Apertura</th>' +
+      '<th>Fecha Cierre</th>' +
+      '<th>Precio Entrada</th>' +
+      '<th>Precio Salida</th>' +
+      '<th>Estrategia</th>' +
+      '<th>Notas</th>' +
+      '</tr></thead><tbody>';
+  trades.slice().reverse().forEach(trade => {
+    const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+    const isCompra = trade.direction === 'long';
+    const direction = isCompra ? 'COMPRA' : 'VENTA';
+    const directionClass = isCompra ? 'trade-direction-compra' : 'trade-direction-venta';
+    const openDate = new Date(trade.openTime);
+    const closeDate = new Date(trade.closeTime);
+    html += `<tr>` +
+        `<td>${formattedAsset}</td>` +
+        `<td class="${directionClass}">${direction}</td>` +
+        `<td>${parseFloat(trade.lots).toFixed(3)}</td>` +
+        `<td class="${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">${parseFloat(trade.resultMxn).toFixed(2)}</td>` +
+        `<td>${trade.pips ? parseFloat(trade.pips).toFixed(3) : '-'}</td>` +
+        `<td>${openDate.toLocaleString('es-ES')}</td>` +
+        `<td>${closeDate.toLocaleString('es-ES')}</td>` +
+        `<td>${trade.openPrice}</td>` +
+        `<td>${trade.closePrice}</td>` +
+        `<td>${trade.strategy}</td>` +
+        `<td>${trade.notes ? trade.notes : '-'}</td>` +
+        `</tr>`;
+  });
+  html += '</tbody></table></div>';
+  tableContainer.innerHTML = html;
+}
+
 function clearForm() {
-  ['asset', 'resultMxn', 'lots', 'direction', 'openTime', 'closeTime', 'openPrice', 'closePrice', 'strategy', 'notes']
+  ['asset', 'resultMxn', 'lots', 'direction', 'openTime', 'closeTime', 'openPrice', 'closePrice', 'strategy', 'notes', 'pips']
     .forEach(id => document.getElementById(id).value = '');
 }
 
@@ -139,12 +189,14 @@ function renderDiary() {
         <div class="trade-row trade-details-row">
           <span class="trade-lots">${parseFloat(trade.lots).toFixed(3)}</span>
           <span class="trade-prices">${trade.openPrice} - ${trade.closePrice}</span>
+          <span class="trade-pips">${trade.pips ? parseFloat(trade.pips).toFixed(3) + ' pips' : '-'}</span>
         </div>
         <div class="trade-row trade-result-row">
           <span class="trade-result ${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">
             ${parseFloat(trade.resultMxn) >= 0 ? '+' : ''}${parseFloat(trade.resultMxn).toFixed(2)} MXN
           </span>
           <button class="btn-details" title="Ver detalles">🔍</button>
+          <button class="btn-edit" title="Editar trade">✏️</button>
           <button class="btn-delete" onclick="deleteTradeById('${trade.openTime}','${trade.closeTime}','${trade.asset}','${trade.resultMxn}','${trade.lots}')" title="Eliminar trade">
             <span class="delete-icon">×</span>
           </button>
@@ -154,6 +206,10 @@ function renderDiary() {
       // Evento para mostrar detalles
       tradeCard.querySelector('.btn-details').onclick = function() {
         showTradeDetails(trade);
+      };
+      // Evento para editar trade
+      tradeCard.querySelector('.btn-edit').onclick = function() {
+        showEditTradeModal(trade);
       };
 
       diaryContainer.appendChild(tradeCard);
@@ -209,6 +265,7 @@ function showTradeDetails(trade) {
         <div><strong>Dirección:</strong> <span class="${directionClass}">${direction}</span></div>
         <div><strong>Lotes:</strong> <span>${parseFloat(trade.lots).toFixed(3)}</span></div>
         <div><strong>Resultado:</strong> <span class="${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">${parseFloat(trade.resultMxn) >= 0 ? '+' : ''}${parseFloat(trade.resultMxn).toFixed(2)} MXN</span></div>
+        <div><strong>Resultado (Pips):</strong> <span>${trade.pips ? parseFloat(trade.pips).toFixed(3) : '-'}</span></div>
         <div><strong>Fecha de Apertura:</strong> <span>${openDateStr} | ${openTimeStr}</span></div>
         <div><strong>Fecha de Cierre:</strong> <span>${closeDateStr} | ${closeTimeStr}</span></div>
         <div><strong>Precio de Entrada:</strong> <span>${trade.openPrice}</span></div>
@@ -368,6 +425,83 @@ function renderStats() {
       mostReliableElement.className = 'stat-value winrate-bad';
     }
   }
+
+  // Cálculo de PNL Pips y Promedio Pips por Trade
+  const tradesWithPips = trades.filter(t => t.pips !== undefined && t.pips !== null && t.pips !== '');
+  const totalPips = tradesWithPips.reduce((sum, t) => sum + parseFloat(t.pips), 0);
+  const avgPips = tradesWithPips.length ? (totalPips / tradesWithPips.length) : 0;
+
+  // Actualizar tarjetas de pips
+  const totalPipsElement = document.getElementById('totalPips');
+  const avgPipsElement = document.getElementById('avgPips');
+  if (totalPipsElement) totalPipsElement.textContent = `${totalPips.toFixed(3)} pips`;
+  if (avgPipsElement) avgPipsElement.textContent = `${avgPips.toFixed(3)} pips`;
+
+  // Cálculo de Max. Ganancia (MXN) y Promedio Ganancia (MXN)
+  const tradesWithMxn = trades.filter(t => t.resultMxn !== undefined && t.resultMxn !== null && t.resultMxn !== '');
+  const maxProfit = tradesWithMxn.length ? Math.max(...tradesWithMxn.map(t => parseFloat(t.resultMxn))) : 0;
+  const avgProfit = tradesWithMxn.length ? (tradesWithMxn.reduce((sum, t) => sum + parseFloat(t.resultMxn), 0) / tradesWithMxn.length) : 0;
+
+  // Actualizar tarjetas de ganancias monetarias
+  const maxProfitElement = document.getElementById('maxProfit');
+  const avgProfitElement = document.getElementById('avgProfit');
+  if (maxProfitElement) maxProfitElement.textContent = `$${maxProfit.toFixed(2)}`;
+  if (avgProfitElement) avgProfitElement.textContent = `$${avgProfit.toFixed(2)}`;
+
+  // === Cálculo de Holding Promedio ===
+  const tradesWithTimes = trades.filter(t => t.openTime && t.closeTime);
+  let avgHoldingMs = 0;
+  if (tradesWithTimes.length > 0) {
+    const totalHoldingMs = tradesWithTimes.reduce((sum, t) => {
+      const open = new Date(t.openTime);
+      const close = new Date(t.closeTime);
+      return sum + (close - open);
+    }, 0);
+    avgHoldingMs = totalHoldingMs / tradesWithTimes.length;
+  }
+  // Convertir a formato legible (horas, minutos)
+  function formatDuration(ms) {
+    if (!ms || ms <= 0) return '-';
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    } else {
+      return `${minutes}min`;
+    }
+  }
+  const avgHoldingElement = document.getElementById('avgHolding');
+  if (avgHoldingElement) avgHoldingElement.textContent = formatDuration(avgHoldingMs);
+
+  // === Cálculo de Horario Favorito (franjas de 4 horas) ===
+  const hourRanges = [
+    { label: '00:00-03:59', start: 0, end: 3 },
+    { label: '04:00-07:59', start: 4, end: 7 },
+    { label: '08:00-11:59', start: 8, end: 11 },
+    { label: '12:00-15:59', start: 12, end: 15 },
+    { label: '16:00-19:59', start: 16, end: 19 },
+    { label: '20:00-23:59', start: 20, end: 23 }
+  ];
+  const hourCounts = Array(hourRanges.length).fill(0);
+  tradesWithTimes.forEach(t => {
+    const open = new Date(t.openTime);
+    const hour = open.getHours();
+    for (let i = 0; i < hourRanges.length; i++) {
+      if (hour >= hourRanges[i].start && hour <= hourRanges[i].end) {
+        hourCounts[i]++;
+        break;
+      }
+    }
+  });
+  let maxCount = Math.max(...hourCounts);
+  let favoriteRange = '-';
+  if (maxCount > 0) {
+    const idx = hourCounts.indexOf(maxCount);
+    favoriteRange = hourRanges[idx].label + ` (${maxCount} ops)`;
+  }
+  const favoriteHourElement = document.getElementById('favoriteHour');
+  if (favoriteHourElement) favoriteHourElement.textContent = favoriteRange;
 }
 
 function saveData() {
@@ -481,43 +615,82 @@ function updateCapitalHeader(period) {
     const welcomeMessage = document.getElementById('welcome-message');
     if (welcomeMessage) welcomeMessage.textContent = `Hola, ${username}`;
 
-    // Calcular saldo y ROI del periodo
     let initialCapital = parseFloat(localStorage.getItem('initialCapital') || '0');
     let trades = JSON.parse(localStorage.getItem('trades')) || [];
-    let startDate;
-    const today = new Date();
-    switch(period) {
-        case 'monthly':
-            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-            break;
-        case 'yearly':
-            startDate = new Date(today.getFullYear(), 0, 1);
-            break;
-        case 'all':
-        default:
-            // Para 'todo el tiempo', usar la fecha más antigua entre el saldo inicial y el primer trade
-            let firstTradeDate = trades.length > 0 ? new Date(Math.min(...trades.map(t => new Date(t.openTime).getTime()))) : new Date();
-            let capitalStartDate = localStorage.getItem('capitalStartDate');
-            if (capitalStartDate) {
-                let capDate = new Date(capitalStartDate);
-                startDate = capDate < firstTradeDate ? capDate : firstTradeDate;
-            } else {
-                startDate = firstTradeDate;
-            }
+    if (trades.length === 0) {
+        // Sin trades, mostrar solo el saldo inicial
+        document.getElementById('capital-balance').textContent = `$${initialCapital.toFixed(2)}`;
+        document.getElementById('capital-roi').textContent = `+$0.00 | ROI: 0%`;
+        return;
     }
-    let currentCapital = initialCapital;
-    let tradesAfterStart = trades.filter(trade => new Date(trade.openTime) >= startDate)
-                                .sort((a, b) => new Date(a.openTime) - new Date(b.openTime));
-    tradesAfterStart.forEach(trade => {
-        currentCapital += parseFloat(trade.resultMxn);
+
+    // Ordenar trades por fecha de apertura
+    trades = trades.slice().sort((a, b) => new Date(a.openTime) - new Date(b.openTime));
+
+    // Agrupar trades por periodo
+    function getPeriodKey(date, period) {
+        const d = new Date(date);
+        if (period === 'monthly') {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        } else if (period === 'yearly') {
+            return `${d.getFullYear()}`;
+        } else if (period === 'weekly') {
+            // Semana ISO: lunes como primer día
+            const temp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const dayNum = temp.getUTCDay() || 7;
+            temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(temp.getUTCFullYear(),0,1));
+            const weekNum = Math.ceil((((temp - yearStart) / 86400000) + 1)/7);
+            return `${temp.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+        }
+        return 'all';
+    }
+
+    // Agrupar trades por periodo
+    const periods = {};
+    trades.forEach(trade => {
+        const key = getPeriodKey(trade.openTime, period);
+        if (!periods[key]) periods[key] = [];
+        periods[key].push(trade);
     });
+    const periodKeys = Object.keys(periods).sort();
+
+    // Calcular balances acumulativos por periodo
+    let balances = [];
+    let lastBalance = initialCapital;
+    periodKeys.forEach((key, idx) => {
+        const pnl = periods[key].reduce((sum, t) => sum + parseFloat(t.resultMxn), 0);
+        const balance = lastBalance + pnl;
+        balances.push({ key, pnl, balance });
+        lastBalance = balance;
+    });
+
+    // Determinar el periodo actual
+    const now = new Date();
+    const currentKey = getPeriodKey(now, period);
+    let currentIdx = periodKeys.indexOf(currentKey);
+
+    let balance, ganancia, roi, base;
+    if (currentIdx === -1) {
+        // No hay trades en el periodo actual
+        balance = balances.length > 0 ? balances[balances.length - 1].balance : initialCapital;
+        ganancia = 0;
+        base = balances.length > 0 ? balances[balances.length - 1].balance : initialCapital;
+        roi = 0;
+    } else {
+        const current = balances[currentIdx];
+        balance = current.balance;
+        ganancia = current.pnl;
+        base = currentIdx === 0 ? initialCapital : balances[currentIdx-1].balance;
+        roi = base > 0 ? (ganancia / base) * 100 : 0;
+    }
+
+    // Mostrar datos
     const balanceElement = document.getElementById('capital-balance');
     const roiElement = document.getElementById('capital-roi');
-    const ganancia = currentCapital - initialCapital;
-    const roi = initialCapital > 0 ? (ganancia / initialCapital) * 100 : 0;
     if (balanceElement) {
-        balanceElement.textContent = `$${currentCapital.toFixed(2)}`;
-        balanceElement.style.color = currentCapital >= initialCapital ? '#2ecc71' : '#e74c3c';
+        balanceElement.textContent = `$${balance.toFixed(2)}`;
+        balanceElement.style.color = balance >= base ? '#2ecc71' : '#e74c3c';
         balanceElement.style.fontWeight = 'bold';
         balanceElement.style.fontSize = '2.2em';
     }
@@ -529,20 +702,114 @@ function updateCapitalHeader(period) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Renderizar los 3 gráficos al inicio
-    renderCapitalChart('monthly');
-    renderCapitalChart('yearly');
-    renderCapitalChart('all');
-    showCapitalChart('monthly');
     updateCapitalHeader('monthly');
-    // Botones de período
     document.querySelectorAll('.period-filter').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.period-filter').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const period = this.dataset.period;
-            showCapitalChart(period);
             updateCapitalHeader(period);
         });
     });
 });
+
+// Agregar función para mostrar el modal de edición
+function showEditTradeModal(trade) {
+  // Si ya existe un modal, eliminarlo primero
+  const oldModal = document.getElementById('trade-details-modal');
+  if (oldModal) oldModal.remove();
+
+  // Crear modal con formulario editable
+  const modal = document.createElement('div');
+  modal.id = 'trade-details-modal';
+  modal.className = 'trade-details-modal-bg';
+  modal.innerHTML = `
+    <div class="trade-details-modal-card">
+      <button class="trade-details-close" title="Cerrar">&times;</button>
+      <h2>Editar Operación</h2>
+      <form id="edit-trade-form" class="trade-details-list">
+        <div><strong>Activo:</strong> <input type="text" name="asset" value="${trade.asset}" required></div>
+        <div><strong>Dirección:</strong> 
+          <select name="direction" required>
+            <option value="long" ${trade.direction === 'long' ? 'selected' : ''}>COMPRA</option>
+            <option value="short" ${trade.direction === 'short' ? 'selected' : ''}>VENTA</option>
+          </select>
+        </div>
+        <div><strong>Lotes:</strong> <input type="number" step="0.001" name="lots" value="${trade.lots}" required></div>
+        <div><strong>Resultado:</strong> <input type="number" step="0.01" name="resultMxn" value="${trade.resultMxn}" required> MXN</div>
+        <div><strong>Resultado (Pips):</strong> <input type="number" step="0.001" min="-999.999" max="999.999" name="pips" value="${trade.pips ? trade.pips : ''}" required placeholder="Ej: 25.500 o -12.345"></div>
+        <div><strong>Fecha de Apertura:</strong> <input type="datetime-local" name="openTime" value="${trade.openTime}" required></div>
+        <div><strong>Fecha de Cierre:</strong> <input type="datetime-local" name="closeTime" value="${trade.closeTime}" required></div>
+        <div><strong>Precio de Entrada:</strong> <input type="number" step="0.00001" name="openPrice" value="${trade.openPrice}" required></div>
+        <div><strong>Precio de Salida:</strong> <input type="number" step="0.00001" name="closePrice" value="${trade.closePrice}" required></div>
+        <div><strong>Estrategia:</strong> 
+          <select name="strategy" required>
+            <option value="Script CCI" ${trade.strategy === 'Script CCI' ? 'selected' : ''}>Script CCI</option>
+            <option value="Script RSI" ${trade.strategy === 'Script RSI' ? 'selected' : ''}>Script RSI</option>
+            <option value="Script MACD" ${trade.strategy === 'Script MACD' ? 'selected' : ''}>Script MACD</option>
+            <option value="Script AO" ${trade.strategy === 'Script AO' ? 'selected' : ''}>Script AO</option>
+            <option value="Script TII" ${trade.strategy === 'Script TII' ? 'selected' : ''}>Script TII</option>
+            <option value="Script DeMarker" ${trade.strategy === 'Script DeMarker' ? 'selected' : ''}>Script DeMarker</option>
+            <option value="Script Estocastico" ${trade.strategy === 'Script Estocastico' ? 'selected' : ''}>Script Estocastico</option>
+            <option value="Script Cruce de MMs" ${trade.strategy === 'Script Cruce de MMs' ? 'selected' : ''}>Script Cruce de MMs</option>
+            <option value="Script SAR" ${trade.strategy === 'Script SAR' ? 'selected' : ''}>Script SAR</option>
+            <option value="Script BMSB" ${trade.strategy === 'Script BMSB' ? 'selected' : ''}>Script BMSB</option>
+            <option value="Script CDM-RSI" ${trade.strategy === 'Script CDM-RSI' ? 'selected' : ''}>Script CDM-RSI</option>
+            <option value="Script EMA Grupos" ${trade.strategy === 'Script EMA Grupos' ? 'selected' : ''}>Script EMA Grupos</option>
+            <option value="Script FCT" ${trade.strategy === 'Script FCT' ? 'selected' : ''}>Script FCT</option>
+            <option value="Señales app" ${trade.strategy === 'Señales app' ? 'selected' : ''}>Señales app</option>
+            <option value="Análisis técnico" ${trade.strategy === 'Análisis técnico' ? 'selected' : ''}>Análisis técnico</option>
+          </select>
+        </div>
+        <div style='align-items: flex-start;'><strong>Notas:</strong> <textarea name="notes" class='trade-details-list-notes'>${trade.notes ? trade.notes : ''}</textarea></div>
+        <div style="margin-top:18px; text-align:right;">
+          <button type="submit" class="btn" style="margin-right:10px;">Guardar</button>
+          <button type="button" class="btn clear" id="cancel-edit-trade">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  // Evento de cierre
+  modal.querySelector('.trade-details-close').onclick = function() {
+    modal.remove();
+  };
+  modal.querySelector('#cancel-edit-trade').onclick = function() {
+    modal.remove();
+  };
+
+  // Evento de guardado
+  modal.querySelector('#edit-trade-form').onsubmit = function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const updatedTrade = {
+      asset: formData.get('asset'),
+      direction: formData.get('direction'),
+      lots: formData.get('lots'),
+      resultMxn: formData.get('resultMxn'),
+      pips: formData.get('pips'),
+      openTime: formData.get('openTime'),
+      closeTime: formData.get('closeTime'),
+      openPrice: formData.get('openPrice'),
+      closePrice: formData.get('closePrice'),
+      strategy: formData.get('strategy'),
+      notes: formData.get('notes')
+    };
+    // Buscar y actualizar el trade en localStorage
+    let trades = JSON.parse(localStorage.getItem('trades')) || [];
+    const index = trades.findIndex(t => t.openTime === trade.openTime && t.closeTime === trade.closeTime && t.asset === trade.asset && t.resultMxn === trade.resultMxn && t.lots === trade.lots);
+    if (index !== -1) {
+      trades[index] = updatedTrade;
+      localStorage.setItem('trades', JSON.stringify(trades));
+      modal.remove();
+      renderDiary();
+      if (document.getElementById('statsContainer')) renderStats();
+      if (typeof loadCardData === 'function') loadCardData();
+      if (document.getElementById('tableContainer')) renderTradesTable();
+    } else {
+      alert('No se pudo encontrar el trade para editar.');
+    }
+  };
+
+  document.body.appendChild(modal);
+}
