@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="estilos.css?v=1.0">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Backtesting - Inicio</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
     <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
 
 <body>
@@ -31,23 +34,17 @@
             <div id="datetime" class="datetime"></div>
         </div>
 
-        <div class="capital-evolution-card" style="margin-bottom: 32px;">
+        <div class="capital-evolution-card modern-card">
             <div class="capital-header">
                 <h2 id="welcome-message">Hola, Usuario</h2>
-                <div class="capital-balance" id="capital-balance" style="display:inline-block;">$0.00</div>
-                <span id="capital-roi" style="margin-left: 12px; font-size:1.1em; color:#00b894;"></span>
+                <div class="capital-balance" id="capital-balance">$0.00</div>
+                <span id="capital-roi"></span>
             </div>
-            <!-- 3 gráficos independientes -->
-            <canvas id="capitalChart-monthly" class="capitalChartCanvas" style="width:100%;max-width:600px;height:180px;"></canvas>
-            <canvas id="capitalChart-yearly" class="capitalChartCanvas" style="width:100%;max-width:600px;height:180px;display:none;"></canvas>
-            <canvas id="capitalChart-all" class="capitalChartCanvas" style="width:100%;max-width:600px;height:180px;display:none;"></canvas>
-            <div class="period-filters" style="margin-top: 16px; text-align: center;">
+            <div class="period-filters integrated">
+                <button class="period-filter" data-period="weekly">Semanal</button>
                 <button class="period-filter active" data-period="monthly">Mensual</button>
                 <button class="period-filter" data-period="yearly">Anual</button>
-                <button class="period-filter" data-period="all">Todo el tiempo</button>
             </div>
-            <div id="capital-reset-info" style="display:none; color: #f57c00; margin-top: 8px; font-size: 0.95em;"></div>
-            <button id="reset-capital-evolution" style="display:none; margin-top: 8px; background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 16px; cursor:pointer;">Reiniciar evolución de capital</button>
         </div>
 
         <div class="cards-container">
@@ -127,6 +124,28 @@
                     <div class="stat-item">
                         <span class="stat-label">PNL:</span>
                         <span id="monthly-pnl" class="stat-value">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="daily-summary annual-summary">
+                <h2>Resumen Anual</h2>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Operaciones Ganadas:</span>
+                        <span id="annual-winning-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Operaciones Perdidas:</span>
+                        <span id="annual-losing-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Empates:</span>
+                        <span id="annual-breakeven-trades" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">PNL:</span>
+                        <span id="annual-pnl" class="stat-value">$0.00</span>
                     </div>
                 </div>
             </div>
@@ -245,6 +264,30 @@
             const monthlyPnlElement = document.getElementById('monthly-pnl');
             monthlyPnlElement.textContent = `$${monthlyPnl.toFixed(2)}`;
             monthlyPnlElement.style.color = monthlyPnl >= 0 ? '#2ecc71' : '#e74c3c';
+
+            // Calcular estadísticas anuales
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+            startOfYear.setHours(0, 0, 0, 0);
+
+            const tradesAnio = trades.filter(trade => {
+                const tradeDate = new Date(trade.openTime);
+                tradeDate.setHours(0, 0, 0, 0);
+                return tradeDate >= startOfYear && tradeDate <= today;
+            });
+
+            // Calcular estadísticas del resumen anual
+            const annualWinningTrades = tradesAnio.filter(trade => parseFloat(trade.resultMxn) > 0).length;
+            const annualLosingTrades = tradesAnio.filter(trade => parseFloat(trade.resultMxn) < 0).length;
+            const annualBreakevenTrades = tradesAnio.filter(trade => parseFloat(trade.resultMxn) === 0).length;
+            const annualPnl = tradesAnio.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+            // Actualizar el resumen anual
+            document.getElementById('annual-winning-trades').textContent = annualWinningTrades;
+            document.getElementById('annual-losing-trades').textContent = annualLosingTrades;
+            document.getElementById('annual-breakeven-trades').textContent = annualBreakevenTrades;
+            const annualPnlElement = document.getElementById('annual-pnl');
+            annualPnlElement.textContent = `$${annualPnl.toFixed(2)}`;
+            annualPnlElement.style.color = annualPnl >= 0 ? '#2e7d32' : '#e74c3c';
 
             // Cargar meta y período desde cookies
             const monthlyGoal = getCookie('monthlyGoal') || '10000';
