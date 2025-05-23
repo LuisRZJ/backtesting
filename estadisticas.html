@@ -17,6 +17,68 @@
         </div>
 
         <div class="stats-sections">
+            <!-- Nueva Sección de Calificación de Rendimiento -->
+            <section class="stats-section rating-stats">
+                <h2>Calificación de Rendimiento</h2>
+                <div class="stat-content">
+                    <p id="performanceRatingSummary">Calculando rendimiento...</p>
+                    <!-- Barra de Progreso de Rendimiento -->
+                    <div class="performance-progress-bar-container">
+                        <div class="progress-bar-labels">
+                            <span>0%</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="performance-progress-bar">
+                            <div id="performanceProgressBarFill" class="progress-bar-fill"></div>
+                            <div id="performanceProgressBarMarker" class="progress-bar-marker"></div>
+                        </div>
+                    </div>
+                    <h4>Criterios considerados:</h4>
+                    <!-- Contenedor para los criterios de calificación -->
+                    <div class="rating-criteria-grid">
+                        <div id="criterion-winrate" class="rating-criterion-item">
+                            <span class="criterion-label">Win Rate:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <div id="criterion-pnl" class="rating-criterion-item">
+                            <span class="criterion-label">PNL Final:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <div id="criterion-drawdown" class="rating-criterion-item">
+                            <span class="criterion-label">Drawdown Máximo:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <div id="criterion-ratio" class="rating-criterion-item">
+                            <span class="criterion-label">Ratio Beneficio/Riesgo:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <div id="criterion-avgpips" class="rating-criterion-item">
+                            <span class="criterion-label">Promedio Pips por Trade:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <!-- Nuevo Criterio: Promedio Ganancia (MXN) -->
+                        <div id="criterion-avgprofit" class="rating-criterion-item">
+                            <span class="criterion-label">Promedio Ganancia (MXN):</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                    </div>
+                    <!-- Mensaje informativo de umbrales -->
+                    <p class="threshold-info">* Umbral mínimo para sumar punto:<br>
+- Win Rate >= 60%<br>
+- PNL Final > 0<br>
+- Drawdown Máximo es 0 (si no hay pérdidas) O PNL Final > 0 y Drawdown Máximo (valor absoluto) &lt;= Pérdidas Totales (valor absoluto) (si hay pérdidas)<br>
+- Ratio Beneficio/Riesgo >= 150.00<br>
+- Promedio Pips por Trade > 5 pips<br>
+- Promedio Ganancia (MXN) > 10 MXN (solo si hay operaciones ganadoras).</p>
+                </div>
+            </section>
+
             <!-- Sección de Estadísticas Generales -->
             <section class="stats-section general-stats">
                 <h2>Estadísticas Generales</h2>
@@ -40,6 +102,14 @@
                         <div class="stat-content">
                             <h3>Operaciones Perdedoras</h3>
                             <div class="stat-value" id="losingTrades">-</div>
+                        </div>
+                    </div>
+                    <!-- Nueva tarjeta para Operaciones Break Even -->
+                    <div class="stat-card">
+                        <div class="stat-icon">🤝</div>
+                        <div class="stat-content">
+                            <h3>Operaciones Break Even</h3>
+                            <div class="stat-value" id="breakevenTrades">-</div>
                         </div>
                     </div>
                     <div class="stat-card">
