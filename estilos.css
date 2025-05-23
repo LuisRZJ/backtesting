@@ -1923,3 +1923,139 @@ body.dark .modern-card .period-filter:hover:not(.active) {
     background: var(--primary-color);
     color: #fff;
 }
+
+/* Estilos para la barra de progreso de rendimiento */
+.performance-progress-bar-container {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 400px; /* Ajusta según necesites */
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+}
+
+.progress-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    color: var(--text-color);
+}
+
+.performance-progress-bar {
+    width: 100%;
+    height: 15px;
+    background-color: var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative; /* Para posicionar el marcador */
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%; /* Se controlará con JavaScript */
+    background-color: var(--primary-color); /* Color de la barra de progreso */
+    border-radius: 8px 0 0 8px; /* Solo redondear el lado izquierdo inicialmente */
+    transition: width 0.5s ease-in-out;
+}
+
+.progress-bar-marker {
+    position: absolute;
+    top: -10px; /* Ajusta la posición vertical */
+    transform: translateX(-50%); /* Centra el marcador en su posición */
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 12px solid var(--text-color); /* Color del marcador */
+    z-index: 1; /* Asegura que esté por encima de la barra */
+    transition: left 0.5s ease-in-out;
+}
+
+body.dark .progress-bar-marker {
+    border-top-color: var(--text-color); /* Asegura que el color del marcador sea visible en tema oscuro */
+}
+
+/* Estilos para la visualización de criterios de calificación */
+.rating-criteria-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.rating-criterion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: var(--background-color); /* Fondo más claro que la tarjeta */
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-size: 0.95em;
+}
+
+.rating-criterion-item .criterion-label {
+    font-weight: bold;
+    color: var(--text-color);
+    opacity: 0.8;
+    flex-grow: 1; /* Permite que la etiqueta ocupe espacio */
+}
+
+.rating-criterion-item .criterion-value {
+    margin-left: 10px; /* Espacio entre etiqueta y valor */
+    font-weight: 500;
+    color: var(--primary-color); /* Color principal para los valores */
+}
+
+.rating-criterion-item .criterion-score {
+    margin-left: 10px; /* Espacio entre valor y puntuación */
+    font-weight: bold;
+    font-size: 1.1em; /* Un poco más grande */
+    width: 20px; /* Ancho fijo para alinear */
+    text-align: center;
+}
+
+/* Colores para la puntuación */
+.rating-criterion-item .criterion-score.scored {
+    color: #4CAF50; /* Verde para criterio cumplido */
+}
+
+.rating-criterion-item .criterion-score.not-scored {
+    color: #f44336; /* Rojo para criterio no cumplido */
+}
+
+body.dark .rating-criterion-item {
+    background-color: var(--background-color);
+    border-color: var(--border-color);
+}
+
+body.dark .rating-criterion-item .criterion-label {
+     color: var(--text-color);
+}
+
+body.dark .rating-criterion-item .criterion-score.scored {
+    color: #81c784; /* Verde más claro para tema oscuro */
+}
+
+body.dark .rating-criterion-item .criterion-score.not-scored {
+    color: #e57373; /* Rojo más claro para tema oscuro */
+}
+
+/* Estilos para el mensaje informativo de umbrales */
+.threshold-info {
+    font-size: 0.9em;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-color);
+    text-align: left; /* Alinear a la izquierda */
+    white-space: pre-line; /* Permite que los saltos de línea en el HTML se interpreten */
+    padding-left: 10px; /* Espacio a la izquierda */
+}
+
+body.dark .threshold-info {
+    color: var(--text-color);
+    border-top-color: var(--border-color);
+}
