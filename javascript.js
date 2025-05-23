@@ -319,6 +319,9 @@ function renderStats() {
   const avgLoss = losingTrades ? (losses / losingTrades).toFixed(2) : 0;
   const profitFactor = Math.abs(losses) ? (gains / Math.abs(losses)).toFixed(2) : 0;
 
+  // Calcular operaciones Break Even
+  const breakevenTrades = trades.filter(t => parseFloat(t.resultMxn) === 0).length;
+
   // Cálculos de estrategias
   const strategyStats = {};
   trades.forEach(trade => {
@@ -370,10 +373,12 @@ function renderStats() {
   const totalProfitElement = document.getElementById('totalProfit');
   const maxDrawdownElement = document.getElementById('maxDrawdown');
   const profitRiskRatioElement = document.getElementById('profitRiskRatio');
+  const breakevenTradesElement = document.getElementById('breakevenTrades');
 
   if (totalTradesElement) totalTradesElement.textContent = total;
   if (winningTradesElement) winningTradesElement.textContent = winningTrades;
   if (losingTradesElement) losingTradesElement.textContent = losingTrades;
+  if (breakevenTradesElement) breakevenTradesElement.textContent = breakevenTrades;
   if (winRateElement) {
     winRateElement.textContent = `${winRate}%`;
     if (parseFloat(winRate) >= 80) {
@@ -502,6 +507,192 @@ function renderStats() {
   }
   const favoriteHourElement = document.getElementById('favoriteHour');
   if (favoriteHourElement) favoriteHourElement.textContent = favoriteRange;
+
+  // === Cálculo de Calificación de Rendimiento ===
+  let performanceScore = 0;
+  const maxPossibleScore = 6; // Aumentar a 6 criterios
+
+  // Calcular valores individuales de los criterios
+  const winRateValue = total ? (winningTrades / total * 100).toFixed(2) : '0.00';
+  const pnlValue = pnl.toFixed(2);
+  const drawdownValue = worst.toFixed(2); // 'worst' ya es el drawdown máximo (más negativo)
+  const profitFactorValue = profitFactor;
+  const avgPipsValue = avgPips.toFixed(3);
+  const avgProfitValue = avgProfit.toFixed(2); // Obtener el valor del promedio de ganancia (ya calculado previamente)
+
+  // Determinar si cada criterio suma un punto y actualizar los elementos HTML
+
+  // Criterio 1: Win Rate
+  const newWinRateThreshold = 60; // New threshold
+  const winRateMet = parseFloat(winRateValue) >= newWinRateThreshold;
+  if (winRateMet) { performanceScore += 1; }
+  const winRateCriterionValueElement = document.querySelector('#criterion-winrate .criterion-value');
+  const winRateCriterionScoreElement = document.querySelector('#criterion-winrate .criterion-score');
+
+  if (winRateCriterionValueElement) winRateCriterionValueElement.textContent = `${winRateValue}%`;
+  if (winRateCriterionScoreElement) {
+      winRateCriterionScoreElement.textContent = winRateMet ? '✓' : '✗';
+      winRateCriterionScoreElement.className = `criterion-score ${winRateMet ? 'scored' : 'not-scored'}`;
+  }
+
+  // Criterio 2: PNL Final
+  const pnlMet = pnl > 0;
+  if (pnlMet) { performanceScore += 1; }
+  const pnlElement = document.querySelector('#criterion-pnl .criterion-value');
+  const pnlScoreElement = document.querySelector('#criterion-pnl .criterion-score');
+  if (pnlElement) pnlElement.textContent = `${pnlValue} MXN`;
+  if (pnlScoreElement) {
+      pnlScoreElement.textContent = pnlMet ? '✓' : '✗';
+      pnlScoreElement.className = `criterion-score ${pnlMet ? 'scored' : 'not-scored'}`;
+  }
+
+  // Criterio 3: Drawdown Máximo
+  const drawdownValueElement = document.querySelector('#criterion-drawdown .criterion-value');
+  const drawdownScoreElement = document.querySelector('#criterion-drawdown .criterion-score');
+
+   // Ajuste: Si no hay trades perdedores (losses === 0), el drawdown es 0, lo cual es excelente.
+   if (losses === 0 && total > 0) { // Si hay trades pero no perdedores, drawdown es 0, esto es bueno.
+       performanceScore += 1;
+        if (drawdownValueElement) drawdownValueElement.textContent = `${drawdownValue} MXN`;
+        if (drawdownScoreElement) {
+            drawdownScoreElement.textContent = '✓';
+            drawdownScoreElement.className = 'criterion-score scored';
+        }
+   } else { // Hay trades perdedores o no hay trades.
+       const drawdownMetAdjusted = pnl > 0 && Math.abs(parseFloat(drawdownValue)) <= Math.abs(losses);
+        if (drawdownMetAdjusted) { performanceScore += 1; }
+        if (drawdownValueElement) drawdownValueElement.textContent = `${drawdownValue} MXN`;
+        if (drawdownScoreElement) {
+            drawdownScoreElement.textContent = drawdownMetAdjusted ? '✓' : '✗';
+            drawdownScoreElement.className = `criterion-score ${drawdownMetAdjusted ? 'scored' : 'not-scored'}`;
+        }
+   }
+
+
+  // Criterio 4: Ratio Beneficio/Riesgo
+  const newProfitFactorThreshold = 150.00; // New threshold (assuming this is the factor value)
+  const profitFactorMet = parseFloat(profitFactorValue) >= newProfitFactorThreshold;
+  if (profitFactorMet) { performanceScore += 1; }
+  const ratioElement = document.querySelector('#criterion-ratio .criterion-value');
+  const ratioScoreElement = document.querySelector('#criterion-ratio .criterion-score');
+  if (ratioElement) ratioElement.textContent = profitFactorValue;
+  if (ratioScoreElement) {
+      ratioScoreElement.textContent = profitFactorMet ? '✓' : '✗';
+      ratioScoreElement.className = `criterion-score ${profitFactorMet ? 'scored' : 'not-scored'}`;
+  }
+
+  // Criterio 5: Promedio Pips por Trade
+  const newAvgPipsThreshold = 5; // New threshold
+  const avgPipsMet = avgPips > newAvgPipsThreshold;
+  if (avgPipsMet) { performanceScore += 1; }
+  const avgPipsCriterionValueElement = document.querySelector('#criterion-avgpips .criterion-value');
+  const avgPipsCriterionScoreElement = document.querySelector('#criterion-avgpips .criterion-score');
+
+  if (avgPipsCriterionValueElement) avgPipsCriterionValueElement.textContent = `${avgPipsValue} pips`;
+  if (avgPipsCriterionScoreElement) {
+      avgPipsCriterionScoreElement.textContent = avgPipsMet ? '✓' : '✗';
+      avgPipsCriterionScoreElement.className = `criterion-score ${avgPipsMet ? 'scored' : 'not-scored'}`;
+  }
+
+  // Criterio 6: Promedio Ganancia (MXN)
+  const newAvgProfitThreshold = 10; // New threshold (ajustar según necesites)
+  const avgProfitMet = parseFloat(avgProfitValue) > newAvgProfitThreshold;
+   // Asegurarse de que haya trades ganadores para considerar este criterio
+  if (winningTrades > 0 && avgProfitMet) { performanceScore += 1; }
+  const avgProfitCriterionValueElement = document.querySelector('#criterion-avgprofit .criterion-value');
+  const avgProfitCriterionScoreElement = document.querySelector('#criterion-avgprofit .criterion-score');
+
+  if (avgProfitCriterionValueElement) avgProfitCriterionValueElement.textContent = `${avgProfitValue} MXN`;
+   if (avgProfitCriterionScoreElement) {
+       // Solo mostrar ✓ o ✗ si hay trades ganadores para evaluar este criterio
+       if (winningTrades > 0) {
+           avgProfitCriterionScoreElement.textContent = avgProfitMet ? '✓' : '✗';
+           avgProfitCriterionScoreElement.className = `criterion-score ${avgProfitMet ? 'scored' : 'not-scored'}`;
+       } else {
+           avgProfitCriterionScoreElement.textContent = '-'; // No aplicable si no hay ganancias
+           avgProfitCriterionScoreElement.className = 'criterion-score'; // Sin color
+       }
+   }
+
+
+  // Calcular porcentaje de calificación
+  const ratingPercentage = total > 0 ? (performanceScore / maxPossibleScore) * 100 : 0;
+
+  // Determinar descripción de la calificación
+  let ratingDescription = 'Sin datos';
+   if (total > 0) {
+      if (ratingPercentage >= 80) {
+          ratingDescription = 'Excelente';
+      } else if (ratingPercentage >= 60) {
+          ratingDescription = 'Bueno';
+      } else if (ratingPercentage >= 40) {
+          ratingDescription = 'Regular';
+      } else {
+          ratingDescription = 'Malo';
+      }
+   } else {
+        ratingDescription = 'Aún no hay trades';
+   }
+
+
+  const ratingSummaryElement = document.getElementById('performanceRatingSummary');
+  if (ratingSummaryElement) {
+      if (total === 0) {
+          ratingSummaryElement.textContent = 'Aún no hay trades para calcular el rendimiento.';
+          // Restablecer estilos si no hay datos
+          ratingSummaryElement.style.color = '';
+          ratingSummaryElement.style.fontWeight = '';
+      } else {
+           ratingSummaryElement.textContent = `Tu rendimiento general es ${ratingDescription} (${ratingPercentage.toFixed(0)}%)`;
+
+           // Cambiar color basado en el porcentaje
+           if (ratingPercentage < 30) {
+               ratingSummaryElement.style.color = '#f44336'; // Rojo
+               ratingSummaryElement.style.fontWeight = 'bold';
+           } else if (ratingPercentage >= 31 && ratingPercentage <= 70) {
+               ratingSummaryElement.style.color = '#FF9800'; // Naranja
+               ratingSummaryElement.style.fontWeight = 'bold';
+           } else if (ratingPercentage >= 71) {
+               ratingSummaryElement.style.color = '#4CAF50'; // Verde
+               ratingSummaryElement.style.fontWeight = 'bold';
+           } else {
+               // Color por defecto si no cae en los rangos (aunque teóricamente siempre caerá)
+               ratingSummaryElement.style.color = '';
+               ratingSummaryElement.style.fontWeight = '';
+           }
+      }
+  }
+
+  // === Actualizar Barra de Progreso ===
+  const progressBarFillElement = document.getElementById('performanceProgressBarFill');
+  const progressBarMarkerElement = document.getElementById('performanceProgressBarMarker');
+
+  if (progressBarFillElement) {
+      // Asegurarse de que el porcentaje esté entre 0 y 100
+      const clampedPercentage = Math.max(0, Math.min(100, ratingPercentage));
+      progressBarFillElement.style.width = `${clampedPercentage}%`;
+  }
+
+  if (progressBarMarkerElement) {
+      // Posicionar el marcador. El left es el porcentaje, pero necesitamos ajustarlo un poco si está muy cerca de los bordes
+      // Para un marcador centrado, la posición left debería ser el porcentaje.
+      // Sin embargo, para que no se salga del borde, podemos limitarlo.
+      // Por ejemplo, si es 0%, left debería ser 0%. Si es 100%, left debería ser 100%.
+      // Ya que el marcador está centrado horizontalmente con transform: translateX(-50%), left = 50% lo pone al medio.
+      // Si left = 0%, el centro del marcador está en el borde izquierdo.
+      // Si left = 100%, el centro del marcador está en el borde derecho.
+      // Queremos que la punta del marcador (el centro) esté en la posición correcta.
+      // El marcador tiene un ancho de 16px (8px left + 8px right borders). Con transform: translateX(-50%), se ajusta.
+      // left: 0% pone la punta en 0.
+      // left: 100% pone la punta en 100.
+      const clampedPercentage = Math.max(0, Math.min(100, ratingPercentage));
+      progressBarMarkerElement.style.left = `${clampedPercentage}%`;
+
+      // Opcional: Ajustar un poco la posición si está muy cerca de los bordes para que la flecha no se corte
+      // Esto es más complejo y quizás no necesario con translateX(-50%)
+      // if (clampedPercentage < 5) { progressBarMarkerElement.style.left = '5%'; }
+      // if (clampedPercentage > 95) { progressBarMarkerElement.style.left = '95%'; }
+  }
 }
 
 function saveData() {
