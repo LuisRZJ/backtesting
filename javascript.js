@@ -547,29 +547,6 @@ function renderStats() {
   }
 
   // Criterio 3: Drawdown Máximo
-  const drawdownValueElement = document.querySelector('#criterion-drawdown .criterion-value');
-  const drawdownScoreElement = document.querySelector('#criterion-drawdown .criterion-score');
-
-   // Ajuste: Si no hay trades perdedores (losses === 0), el drawdown es 0, lo cual es excelente.
-   if (losses === 0 && total > 0) { // Si hay trades pero no perdedores, drawdown es 0, esto es bueno.
-       performanceScore += 1;
-        if (drawdownValueElement) drawdownValueElement.textContent = `${drawdownValue} MXN`;
-        if (drawdownScoreElement) {
-            drawdownScoreElement.textContent = '✓';
-            drawdownScoreElement.className = 'criterion-score scored';
-        }
-   } else { // Hay trades perdedores o no hay trades.
-       const drawdownMetAdjusted = pnl > 0 && Math.abs(parseFloat(drawdownValue)) <= Math.abs(losses);
-        if (drawdownMetAdjusted) { performanceScore += 1; }
-        if (drawdownValueElement) drawdownValueElement.textContent = `${drawdownValue} MXN`;
-        if (drawdownScoreElement) {
-            drawdownScoreElement.textContent = drawdownMetAdjusted ? '✓' : '✗';
-            drawdownScoreElement.className = `criterion-score ${drawdownMetAdjusted ? 'scored' : 'not-scored'}`;
-        }
-   }
-
-
-  // Criterio 4: Ratio Beneficio/Riesgo
   const newProfitFactorThreshold = 150.00; // New threshold (assuming this is the factor value)
   const profitFactorMet = parseFloat(profitFactorValue) >= newProfitFactorThreshold;
   if (profitFactorMet) { performanceScore += 1; }
@@ -581,7 +558,7 @@ function renderStats() {
       ratioScoreElement.className = `criterion-score ${profitFactorMet ? 'scored' : 'not-scored'}`;
   }
 
-  // Criterio 5: Promedio Pips por Trade
+  // Criterio 4: Promedio Pips por Trade
   const newAvgPipsThreshold = 5; // New threshold
   const avgPipsMet = avgPips > newAvgPipsThreshold;
   if (avgPipsMet) { performanceScore += 1; }
@@ -594,7 +571,7 @@ function renderStats() {
       avgPipsCriterionScoreElement.className = `criterion-score ${avgPipsMet ? 'scored' : 'not-scored'}`;
   }
 
-  // Criterio 6: Promedio Ganancia (MXN)
+  // Criterio 5: Promedio Ganancia (MXN)
   const newAvgProfitThreshold = 10; // New threshold (ajustar según necesites)
   const avgProfitMet = parseFloat(avgProfitValue) > newAvgProfitThreshold;
    // Asegurarse de que haya trades ganadores para considerar este criterio
@@ -717,6 +694,26 @@ document.addEventListener('DOMContentLoaded', function() {
   if (document.getElementById('statsContainer')) {
     renderStats();
   }
+
+  // Añadir funcionalidad a los desplegables
+  const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+
+  collapsibleHeaders.forEach(header => {
+    header.addEventListener('click', function() {
+      this.classList.toggle('active');
+      const content = this.nextElementSibling;
+      if (content.classList.contains('active')) {
+        content.classList.remove('active');
+      } else {
+        content.classList.add('active');
+      }
+    });
+  });
+
+  // Tu código para cargar datos y otras funciones aquí...
+  loadCardData(); // Asegúrate de que esta llamada esté aquí si carga datos necesarios
+  setActiveLink(); // Asegúrate de que esta llamada esté aquí si marca enlaces activos
+  // ... otras llamadas a funciones de inicialización si las tienes
 });
 
 // === EVOLUCIÓN DE CAPITAL Y SALDO ACTUAL ===
@@ -810,8 +807,20 @@ function updateCapitalHeader(period) {
     let trades = JSON.parse(localStorage.getItem('trades')) || [];
     if (trades.length === 0) {
         // Sin trades, mostrar solo el saldo inicial
-        document.getElementById('capital-balance').textContent = `$${initialCapital.toFixed(2)}`;
-        document.getElementById('capital-roi').textContent = `+$0.00 | ROI: 0%`;
+        const balanceElement = document.getElementById('capital-balance');
+        const roiElement = document.getElementById('capital-roi');
+         if (balanceElement) {
+             balanceElement.textContent = `$${initialCapital.toFixed(2)}`;
+             balanceElement.style.color = initialCapital >= 0 ? '#2ecc71' : '#e74c3c';
+             balanceElement.style.fontWeight = 'bold';
+             balanceElement.style.fontSize = '2.2em';
+             balanceElement.style.display = 'none'; // Ocultar Saldo Actual
+         }
+         if (roiElement) {
+             roiElement.textContent = `PNL del período: $0.00`; // Mostrar PNL 0 si no hay trades
+             roiElement.style.color = '#00b894';
+             roiElement.style.fontWeight = 'bold';
+         }
         return;
     }
 
@@ -861,19 +870,15 @@ function updateCapitalHeader(period) {
     const currentKey = getPeriodKey(now, period);
     let currentIdx = periodKeys.indexOf(currentKey);
 
-    let balance, ganancia, roi, base;
+    let balance, ganancia;
     if (currentIdx === -1) {
         // No hay trades en el periodo actual
         balance = balances.length > 0 ? balances[balances.length - 1].balance : initialCapital;
         ganancia = 0;
-        base = balances.length > 0 ? balances[balances.length - 1].balance : initialCapital;
-        roi = 0;
     } else {
         const current = balances[currentIdx];
         balance = current.balance;
         ganancia = current.pnl;
-        base = currentIdx === 0 ? initialCapital : balances[currentIdx-1].balance;
-        roi = base > 0 ? (ganancia / base) * 100 : 0;
     }
 
     // Mostrar datos
@@ -881,13 +886,14 @@ function updateCapitalHeader(period) {
     const roiElement = document.getElementById('capital-roi');
     if (balanceElement) {
         balanceElement.textContent = `$${balance.toFixed(2)}`;
-        balanceElement.style.color = balance >= base ? '#2ecc71' : '#e74c3c';
+        balanceElement.style.color = balance >= initialCapital ? '#2ecc71' : '#e74c3c';
         balanceElement.style.fontWeight = 'bold';
         balanceElement.style.fontSize = '2.2em';
+        balanceElement.style.display = 'none'; // Ocultar Saldo Actual
     }
     if (roiElement) {
-        roiElement.textContent = `${ganancia >= 0 ? '+' : ''}$${ganancia.toFixed(2)} | ROI: ${roi >= 0 ? '' : '-'}${Math.abs(roi).toFixed(0)}%`;
-        roiElement.style.color = roi >= 0 ? '#00b894' : '#e74c3c';
+        roiElement.textContent = `PNL del período: ${ganancia >= 0 ? '+' : ''}$${ganancia.toFixed(2)}`; // Añadir etiqueta y mostrar solo la ganancia/pérdida
+        roiElement.style.color = ganancia >= 0 ? '#00b894' : '#e74c3c'; // Mantener el color basado en la ganancia/pérdida
         roiElement.style.fontWeight = 'bold';
     }
 }
@@ -1003,4 +1009,396 @@ function showEditTradeModal(trade) {
   };
 
   document.body.appendChild(modal);
+}
+
+// Función para añadir un nuevo movimiento de capital (depósito/retiro)
+function addMovement() {
+  const type = document.getElementById('movement-type').value;
+  const amount = parseFloat(document.getElementById('movement-amount').value);
+
+  if (isNaN(amount) || amount <= 0) {
+    alert('Por favor, ingresa un monto válido.');
+    return;
+  }
+
+  const movement = {
+    type: type,
+    amount: amount,
+    date: new Date().toISOString() // Usar ISOString para fácil parseo
+  };
+
+  const movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+  movements.push(movement);
+  localStorage.setItem('capitalMovements', JSON.stringify(movements));
+
+  // Limpiar el formulario
+  document.getElementById('movement-amount').value = '0.00';
+
+  // Actualizar el historial mostrado en la página de deposito-retiro
+  renderMovementsHistory();
+
+  // Si estamos en la página de inicio, actualizar el saldo mostrado
+  if (typeof loadCardData === 'function') {
+    loadCardData();
+  }
+
+  alert('Movimiento registrado correctamente');
+}
+
+// Función para renderizar el historial de movimientos en la página de deposito-retiro
+function renderMovementsHistory() {
+  const movementsList = document.getElementById('movements-list');
+  if (!movementsList) return; // Asegurarse de que el elemento existe (solo en deposito-retiro.html)
+
+  let movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+  movementsList.innerHTML = ''; // Limpiar lista actual
+
+  if (movements.length === 0) {
+    movementsList.innerHTML = '<li>No hay movimientos registrados aún.</li>';
+    return;
+  }
+
+  // Ordenar movimientos por fecha, más recientes primero
+  movements.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  movements.forEach((movement, index) => {
+    const listItem = document.createElement('li');
+    listItem.className = 'movement-item'; // Añadir clase para estilos
+    const date = new Date(movement.date);
+    const dateString = date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES');
+    const amountString = `${movement.type === 'deposito' ? '+' : '-'}${movement.amount.toFixed(2)} MXN`;
+    const amountClass = movement.type === 'deposito' ? 'positive' : 'negative';
+
+    listItem.innerHTML = `
+      <span class="movement-date">${dateString}</span>
+      <span class="movement-type">${movement.type.charAt(0).toUpperCase() + movement.type.slice(1)}</span>
+      <span class="movement-amount ${amountClass}">${amountString}</span>
+      <div class="movement-actions">
+        <button class="btn-edit-movement" title="Editar movimiento" data-date="${movement.date}" data-type="${movement.type}">✏️</button>
+        <button class="btn-delete-movement" title="Eliminar movimiento" data-date="${movement.date}" data-type="${movement.type}">×</span></button>
+      </div>
+    `;
+    movementsList.appendChild(listItem);
+  });
+
+  // Añadir event listeners a los botones después de que se han renderizado
+  document.querySelectorAll('.btn-edit-movement').forEach(button => {
+    button.addEventListener('click', function() {
+      const dateToEdit = this.dataset.date;
+      const typeToEdit = this.dataset.type;
+      showEditMovementModal(dateToEdit, typeToEdit);
+    });
+  });
+
+  document.querySelectorAll('.btn-delete-movement').forEach(button => {
+    button.addEventListener('click', function() {
+      const dateToDelete = this.dataset.date;
+      const typeToDelete = this.dataset.type;
+      deleteMovement(dateToDelete, typeToDelete);
+    });
+  });
+}
+
+// Función para mostrar modal de edición de movimiento
+function showEditMovementModal(date, type) {
+  const movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+  
+  // Encontrar el movimiento que coincide con la fecha y el tipo
+  const movementIndex = movements.findIndex(movement => movement.date === date && movement.type === type);
+  const movement = movements[movementIndex];
+
+  if (!movement) {
+      alert('No se pudo encontrar el movimiento para editar.');
+      return;
+  }
+
+  // Si ya existe un modal, eliminarlo primero
+  const oldModal = document.getElementById('edit-movement-modal');
+  if (oldModal) oldModal.remove();
+
+  // Crear modal con formulario editable
+  const modal = document.createElement('div');
+  modal.id = 'edit-movement-modal';
+  modal.className = 'trade-details-modal-bg'; // Reutilizar clase de estilo si es posible
+  modal.innerHTML = `
+    <div class="trade-details-modal-card">
+      <button class="trade-details-close" title="Cerrar">&times;</button>
+      <h2>Editar Movimiento</h2>
+      <form id="edit-movement-form" class="trade-details-list"> <!-- Reutilizar clase de estilo -->
+        <div><strong>Tipo:</strong>
+          <select name="type" required>
+            <option value="deposito" ${movement.type === 'deposito' ? 'selected' : ''}>Depósito</option>
+            <option value="retiro" ${movement.type === 'retiro' ? 'selected' : ''}>Retiro</option>
+          </select>
+        </div>
+        <div><strong>Monto:</strong> <input type="number" step="0.01" name="amount" value="${movement.amount}" required> MXN</div>
+        <!-- La fecha se puede mostrar pero no editar fácilmente con input[datetime-local] si se guarda como ISOString simple sin zona horaria local. Podríamos simplificar o dejarla no editable para esta versión. -->
+        <!-- <div><strong>Fecha:</strong> <input type="datetime-local" name="date" value="${movement.date.substring(0, 16)}" required></div> -->
+         <div><strong>Fecha:</strong> <span>${new Date(movement.date).toLocaleString('es-ES')}</span></div>
+        <div style="margin-top:18px; text-align:right;">
+          <button type="submit" class="btn" style="margin-right:10px;">Guardar</button>
+          <button type="button" class="btn clear" id="cancel-edit-movement">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  // Evento de cierre
+  modal.querySelector('.trade-details-close').onclick = function() {
+    modal.remove();
+  };
+  modal.querySelector('#cancel-edit-movement').onclick = function() {
+    modal.remove();
+  };
+
+  // Evento de guardado
+  modal.querySelector('#edit-movement-form').onsubmit = function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const updatedMovement = {
+      type: formData.get('type'),
+      amount: parseFloat(formData.get('amount')),
+      date: movement.date // Mantener la fecha original o actualizar si se añade campo de fecha editable
+    };
+
+    if (isNaN(updatedMovement.amount) || updatedMovement.amount <= 0) {
+        alert('Por favor, ingresa un monto válido.');
+        return;
+    }
+
+    let movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+    
+    // Encontrar el índice del movimiento original para actualizarlo
+    const originalIndex = movements.findIndex(m => m.date === date && m.type === type); // Usar los argumentos originales date y type
+
+    if(originalIndex !== -1) {
+        movements[originalIndex] = updatedMovement;
+        localStorage.setItem('capitalMovements', JSON.stringify(movements));
+        modal.remove();
+        renderMovementsHistory();
+        if (typeof loadCardData === 'function') {
+          loadCardData(); // Actualizar saldo en index.html si está visible
+        }
+        alert('Movimiento actualizado correctamente');
+    } else {
+        alert('Error al actualizar el movimiento: no se encontró el original.');
+        modal.remove(); // Cerrar modal si no se encuentra
+    }
+  };
+
+  document.body.appendChild(modal);
+}
+
+// Función para eliminar un movimiento de capital
+function deleteMovement(date, type) {
+  console.log('Intentando eliminar movimiento con fecha:', date, 'y tipo:', type); // Log para depuración
+  if (confirm('¿Estás seguro de que deseas eliminar este movimiento?')) {
+    let movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+    
+    // Encontrar el índice del movimiento que coincide con la fecha y el tipo
+    const indexToDelete = movements.findIndex(movement => movement.date === date && movement.type === type);
+
+    if (indexToDelete !== -1) {
+      movements.splice(indexToDelete, 1);
+      localStorage.setItem('capitalMovements', JSON.stringify(movements));
+      renderMovementsHistory();
+      if (typeof loadCardData === 'function') {
+        loadCardData(); // Actualizar saldo en index.html si está visible
+      }
+      alert('Movimiento eliminado correctamente');
+    } else {
+      alert('No se pudo encontrar el movimiento para eliminar.');
+    }
+  }
+}
+
+// Modificar loadCardData para incluir movimientos de capital en el cálculo del saldo
+function loadCardData() {
+    const trades = JSON.parse(localStorage.getItem('trades')) || [];
+    const movements = JSON.parse(localStorage.getItem('capitalMovements')) || []; // Cargar movimientos de capital
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Establecer inicio del día
+
+    // Calcular estadísticas del resumen diario
+    const tradesHoy = trades.filter(trade => {
+        const tradeDate = new Date(trade.openTime);
+        tradeDate.setHours(0, 0, 0, 0);
+        return tradeDate.getTime() === today.getTime();
+    });
+
+    // Calcular estadísticas del resumen diario
+    const winningTrades = tradesHoy.filter(trade => parseFloat(trade.resultMxn) > 0).length;
+    const losingTrades = tradesHoy.filter(trade => parseFloat(trade.resultMxn) < 0).length;
+    const breakevenTrades = tradesHoy.filter(trade => parseFloat(trade.resultMxn) === 0).length;
+    const dailyPnl = tradesHoy.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+    // Actualizar el resumen diario
+    document.getElementById('winning-trades').textContent = winningTrades;
+    document.getElementById('losing-trades').textContent = losingTrades;
+    document.getElementById('breakeven-trades').textContent = breakevenTrades;
+
+    const dailyPnlElement = document.getElementById('daily-pnl');
+    dailyPnlElement.textContent = `$${dailyPnl.toFixed(2)}`;
+    dailyPnlElement.style.color = dailyPnl >= 0 ? '#2ecc71' : '#e74c3c';
+
+    // Calcular estadísticas semanales
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay()); // Inicio de la semana (domingo)
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const tradesSemana = trades.filter(trade => {
+        const tradeDate = new Date(trade.openTime);
+        tradeDate.setHours(0, 0, 0, 0);
+        return tradeDate >= startOfWeek && tradeDate <= today;
+    });
+
+    // Calcular estadísticas del resumen semanal
+    const weeklyWinningTrades = tradesSemana.filter(trade => parseFloat(trade.resultMxn) > 0).length;
+    const weeklyLosingTrades = tradesSemana.filter(trade => parseFloat(trade.resultMxn) < 0).length;
+    const weeklyBreakevenTrades = tradesSemana.filter(trade => parseFloat(trade.resultMxn) === 0).length;
+    const weeklyPnl = tradesSemana.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+    // Actualizar el resumen semanal
+    document.getElementById('weekly-winning-trades').textContent = weeklyWinningTrades;
+    document.getElementById('weekly-losing-trades').textContent = weeklyLosingTrades;
+    document.getElementById('weekly-breakeven-trades').textContent = weeklyBreakevenTrades;
+
+    const weeklyPnlElement = document.getElementById('weekly-pnl');
+    weeklyPnlElement.textContent = `$${weeklyPnl.toFixed(2)}`;
+    weeklyPnlElement.style.color = weeklyPnl >= 0 ? '#2ecc71' : '#e74c3c';
+
+    // Calcular estadísticas mensuales
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const tradesMes = trades.filter(trade => {
+        const tradeDate = new Date(trade.openTime);
+        tradeDate.setHours(0, 0, 0, 0);
+        return tradeDate >= startOfMonth && tradeDate <= today;
+    });
+
+    // Calcular estadísticas del resumen mensual
+    const monthlyWinningTrades = tradesMes.filter(trade => parseFloat(trade.resultMxn) > 0).length;
+    const monthlyLosingTrades = tradesMes.filter(trade => parseFloat(trade.resultMxn) < 0).length;
+    const monthlyBreakevenTrades = tradesMes.filter(trade => parseFloat(trade.resultMxn) === 0).length;
+    const monthlyPnl = tradesMes.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+    // Actualizar el resumen mensual
+    document.getElementById('monthly-winning-trades').textContent = monthlyWinningTrades;
+    document.getElementById('monthly-losing-trades').textContent = monthlyLosingTrades;
+    document.getElementById('monthly-breakeven-trades').textContent = monthlyBreakevenTrades;
+
+    const monthlyPnlElement = document.getElementById('monthly-pnl');
+    monthlyPnlElement.textContent = `$${monthlyPnl.toFixed(2)}`;
+    monthlyPnlElement.style.color = monthlyPnl >= 0 ? '#2ecc71' : '#e74c3c';
+
+    // Calcular estadísticas anuales
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+    startOfYear.setHours(0, 0, 0, 0);
+
+    const tradesAnio = trades.filter(trade => {
+        const tradeDate = new Date(trade.openTime);
+        tradeDate.setHours(0, 0, 0, 0);
+        return tradeDate >= startOfYear && tradeDate <= today;
+    });
+
+    // Calcular estadísticas del resumen anual
+    const annualWinningTrades = tradesAnio.filter(trade => parseFloat(trade.resultMxn) > 0).length;
+    const annualLosingTrades = tradesAnio.filter(trade => parseFloat(trade.resultMxn) < 0).length;
+    const annualBreakevenTrades = tradesAnio.filter(trade => parseFloat(trade.resultMxn) === 0).length;
+    const annualPnl = tradesAnio.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+    // Actualizar el resumen anual
+    document.getElementById('annual-winning-trades').textContent = annualWinningTrades;
+    document.getElementById('annual-losing-trades').textContent = annualLosingTrades;
+    document.getElementById('annual-breakeven-trades').textContent = annualBreakevenTrades;
+    const annualPnlElement = document.getElementById('annual-pnl');
+    annualPnlElement.textContent = `$${annualPnl.toFixed(2)}`;
+    annualPnlElement.style.color = annualPnl >= 0 ? '#2e7d32' : '#e74c3c';
+
+    // Cargar meta y período desde cookies
+    const monthlyGoal = getCookie('monthlyGoal') || '10000';
+    const goalPeriod = getCookie('goalPeriod') || 'monthly';
+
+    // Actualizar el texto del período
+    const periodTexts = {
+        'daily': 'Diaria',
+        'weekly': 'Semanal',
+        'monthly': 'Mensual',
+        'yearly': 'Anual'
+    };
+    document.getElementById('goal-period-text').textContent = periodTexts[goalPeriod] || 'Mensual';
+
+    // Calcular el PNL para el período seleccionado
+    let periodStart;
+    switch(goalPeriod) {
+        case 'daily':
+            periodStart = new Date(today.setHours(0, 0, 0, 0));
+            break;
+        case 'weekly':
+            periodStart = new Date(today.setDate(today.getDate() - today.getDay()));
+            break;
+        case 'monthly':
+            periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case 'yearly':
+            periodStart = new Date(today.getFullYear(), 0, 1);
+            break;
+        default:
+            periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    }
+
+    const periodPNL = trades
+        .filter(trade => new Date(trade.openTime) >= periodStart)
+        .reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+    // Actualizar la visualización del progreso
+    const goalAmount = parseFloat(monthlyGoal);
+    const progressPercentage = (periodPNL / goalAmount) * 100;
+
+    // Actualizar elementos con los valores calculados
+    const currentAmountElement = document.getElementById('current-amount');
+    const goalAmountElement = document.getElementById('goal-amount');
+    const progressElement = document.getElementById('progress-percentage');
+
+    currentAmountElement.textContent = `$${periodPNL.toFixed(2)}`;
+    goalAmountElement.textContent = `$${goalAmount.toFixed(2)}`;
+    progressElement.textContent = `${progressPercentage.toFixed(1)}%`;
+
+    // Aplicar colores según el progreso
+    currentAmountElement.style.color = periodPNL >= goalAmount ? '#2e7d32' : '#f57c00';
+    currentAmountElement.style.fontWeight = 'bold';
+    goalAmountElement.style.color = '#2e7d32';
+    progressElement.style.color = '#FF6B00';
+
+    // --- Calcular y mostrar Saldo Final --- //
+    const initialCapital = parseFloat(localStorage.getItem('initialCapital')) || 0; // Obtener capital inicial, default 0 si no existe
+    const totalMovementsPnl = movements.reduce((sum, movement) => {
+        if (movement.type === 'deposito') {
+            return sum + parseFloat(movement.amount);
+        } else if (movement.type === 'retiro') {
+            return sum - parseFloat(movement.amount);
+        }
+        return sum;
+    }, 0);
+
+    // Calcular el PNL total de las operaciones de trading
+    const totalTradesPnl = trades.reduce((sum, trade) => sum + parseFloat(trade.resultMxn), 0);
+
+    // Calcular el saldo final sumando el capital inicial, el PNL de movimientos y el PNL de trades
+    const finalBalance = initialCapital + totalMovementsPnl + totalTradesPnl;
+
+    const finalBalanceElement = document.getElementById('final-account-balance');
+    if (finalBalanceElement) {
+        finalBalanceElement.textContent = `$${finalBalance.toFixed(2)}`;
+        // Aplicar color basado en si el saldo ha crecido desde el capital inicial
+        finalBalanceElement.style.color = finalBalance >= initialCapital ? '#2e7d32' : '#e74c3c';
+    }
+    // ------------------------------------ //
+}
+
+// Cargar tema guardado
+function loadTheme() {
+    const theme = getCookie('theme') || 'light';
+    document.body.className = theme;
 }
