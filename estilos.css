@@ -77,7 +77,7 @@ body.menu-open {
     right: 0;
     height: 100vh;
     width: 250px;
-    background-color: var(--menu-background);
+    background-color: rgba(173, 216, 230, 0.15); /* Ligeramente azulado con transparencia */
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: -2px 0 10px var(--menu-shadow);
@@ -171,11 +171,13 @@ body.menu-open {
     margin-top: 10px;
 }
 
-/* Tarjetas informativas */
+/* Estilos para las tarjetas informativas */
 .cards-container {
     display: flex;
     justify-content: center;
     margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
 .card {
@@ -185,7 +187,9 @@ body.menu-open {
     padding: 20px;
     text-align: center;
     transition: transform 0.2s;
-    width: 350px;
+    flex-basis: 350px;
+    flex-grow: 1;
+    max-width: 380px; /* Opcional: limitar el ancho máximo para que no se extiendan demasiado en pantallas grandes */
 }
 
 .card:hover {
@@ -229,6 +233,34 @@ body.menu-open {
     font-size: 1.1em;
     margin-top: 2px;
     color: var(--primary-color);
+}
+
+/* Nueva clase para la tarjeta principal de saldo */
+.main-balance-card {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px auto; /* Centrar y añadir margen */
+    max-width: 400px; /* Ancho máximo para la tarjeta centrada */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Añadir sombra */
+}
+
+.main-balance-card h3 {
+     margin-top: 0;
+     color: var(--text-color);
+}
+
+.main-balance-card .final-balance {
+    /* Puedes añadir estilos específicos para el contenedor del número si es necesario */
+}
+
+/* Estilos para el saldo final de la cuenta */
+#final-account-balance {
+    font-family: 'Lucida Console', Monaco, monospace; /* Fuente monoespaciada para el número */
+    font-size: 1.8em; /* Opcional: ajustar tamaño de fuente si es necesario */
+    font-weight: bold; /* Opcional: hacer el texto en negrita */
 }
 
 /* Botones de navegación */
@@ -1830,7 +1862,138 @@ body.dark .trade-details-list textarea:focus {
   box-shadow: 0 0 0 2px rgba(255,143,0,0.10);
 }
 
-/* Card moderna para capital */
+.trade-details-list button { /* Estilos ya definidos en .btn */ }
+.trade-details-list button.clear { /* Estilos ya definidos en .clear */ }
+
+/* Responsive adjustments for movement items */
+@media (max-width: 600px) {
+    .movement-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .movement-item span {
+        width: 100%;
+        text-align: left;
+    }
+
+    .movement-item .movement-date {
+         flex-basis: auto;
+         margin-bottom: 5px; /* Espacio después de la fecha en móvil */
+    }
+
+    .movement-item .movement-type {
+        flex-basis: auto;
+        text-align: left;
+        margin-bottom: 5px; /* Espacio después del tipo en móvil */
+    }
+
+    .movement-item .movement-amount {
+        flex-grow: 0;
+        text-align: left;
+        margin-bottom: 10px; /* Add space before actions */
+    }
+
+    .movement-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 5px; /* Espacio antes de los botones de acción */
+    }
+
+     /* Ajustes para inputs en modal de movimiento en móvil */
+    .trade-details-list input[type="number"],
+    .trade-details-list select {
+        width: calc(100% - 10px); /* Ajustar ancho */
+        margin-left: 0; /* Eliminar margen izquierdo */
+        margin-top: 5px; /* Espacio arriba */
+    }
+
+    .trade-details-list div {
+         flex-direction: column; /* Apilar items en móvil */
+         align-items: flex-start; /* Alinear a la izquierda */
+         padding-bottom: 8px; /* Más padding abajo */
+    }
+
+    .trade-details-list strong {
+         min-width: auto; /* Eliminar ancho mínimo */
+         margin-bottom: 5px; /* Espacio debajo del label */
+    }
+}
+
+/* Estilos para el modo oscuro - Página de Depósito/Retiro */
+body.dark.deposito-retiro-page .modern-card {
+     background-color: var(--card-background);
+     border-color: var(--border-color);
+}
+
+body.dark .movement-item {
+     background-color: var(--card-background); /* Usar el color de tarjeta oscura */
+     border-color: var(--border-color);
+     box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Sombra más visible en oscuro */
+}
+
+body.dark .movement-item span {
+     color: var(--text-color);
+}
+
+body.dark .movement-actions .btn-edit-movement {
+    color: #64b5f6; /* Azul más claro en oscuro */
+}
+
+body.dark .movement-actions .btn-edit-movement:hover {
+    color: #42a5f5; /* Azul al pasar el mouse en oscuro */
+}
+
+body.dark .movement-actions .btn-delete-movement {
+    color: #ef5350; /* Rojo más claro en oscuro */
+}
+
+body.dark .movement-actions .btn-delete-movement:hover {
+    color: #e57373; /* Rojo al pasar el mouse en oscuro */
+}
+
+body.dark .form-container label {
+    color: var(--text-color);
+}
+
+body.dark .form-container select,
+body.dark .form-container input[type="number"] {
+    background-color: var(--input-background);
+    color: var(--input-text);
+    border-color: var(--border-color);
+}
+
+/* Estilos para el modo oscuro - Modal de Edición de Movimiento */
+body.dark .trade-details-modal-card h2 {
+   color: var(--primary-color);
+}
+
+body.dark .trade-details-list div {
+    border-bottom-color: #444; /* Borde más oscuro en tema oscuro */
+}
+
+body.dark .trade-details-list strong {
+    color: #ccc; /* Color para labels en oscuro */
+}
+
+body.dark .trade-details-list input[type="number"],
+body.dark .trade-details-list select {
+    background: var(--input-background);
+    color: var(--input-text);
+    border: 1.5px solid var(--border-color);
+}
+
+body.dark .trade-details-list input[type="number"]:focus,
+body.dark .trade-details-list select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(255,143,0,0.10); /* Sombra tema oscuro */
+}
+
+body.dark .trade-details-list button { /* Estilos ya definidos en modo oscuro */ }
+body.dark .trade-details-list button.clear { /* Estilos ya definidos en modo oscuro */ }
+
+/* Card moderna para capital y otros usos */
 .modern-card {
     background: var(--card-background);
     border: 1.5px solid var(--primary-color);
@@ -1843,36 +2006,39 @@ body.dark .trade-details-list textarea:focus {
     align-items: center;
     transition: box-shadow 0.2s;
 }
+
 .modern-card .capital-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 18px;
 }
+
 .modern-card #welcome-message {
     font-size: 1.3em;
     font-weight: 600;
     margin-bottom: 4px;
     color: var(--primary-color);
 }
+
 .modern-card #capital-balance {
-    font-size: 2.3em;
-    font-weight: bold;
-    color: #2ecc71;
-    margin-bottom: 2px;
+    display: none; /* Ocultar el saldo actual */
 }
+
 .modern-card #capital-roi {
-    font-size: 1.1em;
-    font-weight: 500;
-    color: #00b894;
+    font-size: 1.5em; /* Aumentar el tamaño de fuente para destacar */
+    font-weight: bold; /* Asegurar que sigue en negrita */
+    color: #00b894; /* Mantener el color o ajustar si es necesario */
     margin-bottom: 8px;
 }
+
 .modern-card .period-filters.integrated {
     display: flex;
     gap: 12px;
     margin-top: 10px;
     justify-content: center;
 }
+
 .modern-card .period-filter {
     background: #fff;
     color: var(--primary-color);
@@ -1885,16 +2051,19 @@ body.dark .trade-details-list textarea:focus {
     transition: background 0.2s, color 0.2s, box-shadow 0.2s;
     box-shadow: 0 2px 8px rgba(255,107,0,0.08);
 }
+
 .modern-card .period-filter.active, .modern-card .period-filter:focus {
     background: var(--primary-color);
     color: #fff;
     border: 1.5px solid var(--primary-color);
     outline: none;
 }
+
 .modern-card .period-filter:hover:not(.active) {
-    background: var(--primary-color);
-    color: #fff;
+    background-color: var(--button-hover); /* Usar el color de hover del tema */
+    color: #fff; /* Cambiar color de texto a blanco para mejor contraste */
 }
+
 @media (max-width: 600px) {
     .modern-card {
         padding: 18px 6px 16px 6px;
@@ -1913,15 +2082,17 @@ body.dark .modern-card .period-filter {
     color: var(--primary-color);
     border: 1.5px solid var(--primary-color);
 }
+
 body.dark .modern-card .period-filter.active, 
 body.dark .modern-card .period-filter:focus {
     background: var(--primary-color);
     color: #fff;
     border: 1.5px solid var(--primary-color);
 }
+
 body.dark .modern-card .period-filter:hover:not(.active) {
-    background: var(--primary-color);
-    color: #fff;
+    background-color: var(--button-hover); /* Usar el color de hover del tema */
+    color: #fff; /* Cambiar color de texto a blanco para mejor contraste */
 }
 
 /* Estilos para la barra de progreso de rendimiento */
@@ -1948,32 +2119,32 @@ body.dark .modern-card .period-filter:hover:not(.active) {
     background-color: var(--border-color);
     border-radius: 8px;
     overflow: hidden;
-    position: relative; /* Para posicionar el marcador */
+    position: relative;
 }
 
 .progress-bar-fill {
     height: 100%;
-    width: 0%; /* Se controlará con JavaScript */
-    background-color: var(--primary-color); /* Color de la barra de progreso */
-    border-radius: 8px 0 0 8px; /* Solo redondear el lado izquierdo inicialmente */
+    width: 0%;
+    background-color: var(--primary-color);
+    border-radius: 8px 0 0 8px;
     transition: width 0.5s ease-in-out;
 }
 
 .progress-bar-marker {
     position: absolute;
-    top: -10px; /* Ajusta la posición vertical */
-    transform: translateX(-50%); /* Centra el marcador en su posición */
+    top: -10px;
+    transform: translateX(-50%);
     width: 0;
     height: 0;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
-    border-top: 12px solid var(--text-color); /* Color del marcador */
-    z-index: 1; /* Asegura que esté por encima de la barra */
+    border-top: 12px solid var(--text-color);
+    z-index: 1;
     transition: left 0.5s ease-in-out;
 }
 
 body.dark .progress-bar-marker {
-    border-top-color: var(--text-color); /* Asegura que el color del marcador sea visible en tema oscuro */
+    border-top-color: var(--text-color);
 }
 
 /* Estilos para la visualización de criterios de calificación */
@@ -1989,7 +2160,7 @@ body.dark .progress-bar-marker {
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background-color: var(--background-color); /* Fondo más claro que la tarjeta */
+    background-color: var(--background-color);
     border-radius: 6px;
     border: 1px solid var(--border-color);
     font-size: 0.95em;
@@ -1999,20 +2170,20 @@ body.dark .progress-bar-marker {
     font-weight: bold;
     color: var(--text-color);
     opacity: 0.8;
-    flex-grow: 1; /* Permite que la etiqueta ocupe espacio */
+    flex-grow: 1;
 }
 
 .rating-criterion-item .criterion-value {
-    margin-left: 10px; /* Espacio entre etiqueta y valor */
+    margin-left: 10px;
     font-weight: 500;
-    color: var(--primary-color); /* Color principal para los valores */
+    color: var(--primary-color);
 }
 
 .rating-criterion-item .criterion-score {
-    margin-left: 10px; /* Espacio entre valor y puntuación */
+    margin-left: 10px;
     font-weight: bold;
-    font-size: 1.1em; /* Un poco más grande */
-    width: 20px; /* Ancho fijo para alinear */
+    font-size: 1.1em;
+    width: 20px;
     text-align: center;
 }
 
@@ -2030,32 +2201,428 @@ body.dark .rating-criterion-item {
     border-color: var(--border-color);
 }
 
-body.dark .rating-criterion-item .criterion-label {
-     color: var(--text-color);
+/* Estilos para la página de Depósito/Retiro */
+body.deposito-retiro-page .menu-toggle,
+body.deposito-retiro-page .menu-overlay,
+body.deposito-retiro-page .nav-menu {
+    display: none; /* Ocultar el menú de navegación */
 }
 
-body.dark .rating-criterion-item .criterion-score.scored {
-    color: #81c784; /* Verde más claro para tema oscuro */
+body.deposito-retiro-page {
+    padding-top: 20px; /* Ajustar padding si el menú no está */
 }
 
-body.dark .rating-criterion-item .criterion-score.not-scored {
-    color: #e57373; /* Rojo más claro para tema oscuro */
+.back-to-home {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s;
+    text-decoration: none;
+    text-align: center;
 }
 
-/* Estilos para el mensaje informativo de umbrales */
-.threshold-info {
-    font-size: 0.9em;
+.back-to-home:hover {
+    background-color: var(--button-hover);
+}
+
+/* Contenedor del formulario y historial */
+.form-container.modern-card,
+.movements-history.modern-card {
+    margin-bottom: 20px;
+    padding: 20px; /* Añadir padding para asegurar espacio interno */
+}
+
+/* Estilos para el historial de movimientos */
+.movements-history ul {
+    list-style: none;
+    padding: 0;
+}
+
+.movement-item {
+    background-color: var(--background-color); /* Usar background-color para visibilidad en ambos temas */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Añadir una ligera sombra */
+}
+
+.movement-item span {
+    font-size: 1em;
+    color: var(--text-color); /* Asegurar color de texto del tema */
+}
+
+.movement-item .movement-date {
+    flex-basis: 180px;
+    font-weight: bold;
+}
+
+.movement-item .movement-type {
+    flex-basis: 100px;
+    text-align: center;
+}
+
+.movement-item .movement-amount {
+    flex-grow: 1;
+    text-align: right;
+    font-weight: bold;
+}
+
+.movement-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    margin-left: 5px;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.movement-actions .btn-edit-movement {
+    color: #2196F3; /* Azul */
+}
+
+.movement-actions .btn-edit-movement:hover {
+    color: #1976D2;
+}
+
+.movement-actions .btn-delete-movement {
+    color: #F44336; /* Rojo */
+}
+
+.movement-actions .btn-delete-movement:hover {
+    color: #D32F2F;
+}
+
+/* Estilos para el formulario */
+.form-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
     color: var(--text-color);
-    opacity: 0.7;
+}
+
+.form-container select,
+.form-container input[type="number"] {
+    width: calc(100% - 22px); /* Ajustar ancho */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--input-background);
+    color: var(--input-text);
+    box-sizing: border-box; /* Incluir padding y border en el ancho */
+}
+
+.form-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background-color 0.2s;
+}
+
+.form-container button:hover {
+    background-color: var(--button-hover);
+}
+
+/* Estilos para el modal de edición de movimiento (reutilizar clases de trade) */
+.trade-details-modal-bg { /* Usado para modales en general */ }
+.trade-details-modal-card { /* Usado para modales en general */ }
+.trade-details-close { /* Usado para modales en general */ }
+.trade-details-modal-card h2 { /* Usado para modales en general */ }
+.trade-details-list { /* Usado para modales en general */ }
+.trade-details-list div { /* Usado para modales en general */ }
+.trade-details-list strong { /* Usado para modales en general */ }
+
+/* Estilos específicos para los inputs en el modal de movimiento */
+.trade-details-list input[type="number"],
+.trade-details-list select {
+    width: calc(100% - 130px); /* Ajustar ancho */
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1.5px solid var(--border-color); /* Usar variable de tema */
+    border-radius: 6px; /* Borde redondeado */
+    font-size: 1em;
+    background: var(--input-background); /* Usar variable de tema */
+    color: var(--input-text); /* Usar variable de tema */
+    transition: border-color 0.2s, box-shadow 0.2s; /* Transición */
+    margin-left: 10px;
+    box-sizing: border-box; /* Incluir padding y border en el ancho */
+}
+
+.trade-details-list input[type="number"]:focus,
+.trade-details-list select:focus {
+  border-color: var(--primary-color); /* Resaltar al enfocar */
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,107,0,0.08); /* Sombra al enfocar */
+}
+
+.trade-details-list button { /* Estilos ya definidos en .btn */ }
+.trade-details-list button.clear { /* Estilos ya definidos en .clear */ }
+
+/* Responsive adjustments for movement items */
+@media (max-width: 600px) {
+    .movement-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .movement-item span {
+        width: 100%;
+        text-align: left;
+    }
+
+    .movement-item .movement-date {
+         flex-basis: auto;
+         margin-bottom: 5px; /* Espacio después de la fecha en móvil */
+    }
+
+    .movement-item .movement-type {
+        flex-basis: auto;
+        text-align: left;
+        margin-bottom: 5px; /* Espacio después del tipo en móvil */
+    }
+
+    .movement-item .movement-amount {
+        flex-grow: 0;
+        text-align: left;
+        margin-bottom: 10px; /* Add space before actions */
+    }
+
+    .movement-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 5px; /* Espacio antes de los botones de acción */
+    }
+
+     /* Ajustes para inputs en modal de movimiento en móvil */
+    .trade-details-list input[type="number"],
+    .trade-details-list select {
+        width: calc(100% - 10px); /* Ajustar ancho */
+        margin-left: 0; /* Eliminar margen izquierdo */
+        margin-top: 5px; /* Espacio arriba */
+    }
+
+    .trade-details-list div {
+         flex-direction: column; /* Apilar items en móvil */
+         align-items: flex-start; /* Alinear a la izquierda */
+         padding-bottom: 8px; /* Más padding abajo */
+    }
+
+    .trade-details-list strong {
+         min-width: auto; /* Eliminar ancho mínimo */
+         margin-bottom: 5px; /* Espacio debajo del label */
+    }
+}
+
+/* Estilos para el modo oscuro - Página de Depósito/Retiro */
+body.dark.deposito-retiro-page .modern-card {
+    background-color: var(--card-background);
+    border-color: var(--border-color);
+}
+
+body.dark .movement-item {
+     background-color: var(--card-background); /* Usar el color de tarjeta oscura */
+     border-color: var(--border-color);
+     box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Sombra más visible en oscuro */
+}
+
+body.dark .movement-item span {
+    color: var(--text-color);
+}
+
+body.dark .movement-actions .btn-edit-movement {
+    color: #64b5f6; /* Azul más claro en oscuro */
+}
+
+body.dark .movement-actions .btn-edit-movement:hover {
+    color: #42a5f5; /* Azul al pasar el mouse en oscuro */
+}
+
+body.dark .movement-actions .btn-delete-movement {
+    color: #ef5350; /* Rojo más claro en oscuro */
+}
+
+body.dark .movement-actions .btn-delete-movement:hover {
+    color: #e57373; /* Rojo al pasar el mouse en oscuro */
+}
+
+body.dark .form-container label {
+    color: var(--text-color);
+}
+
+body.dark .form-container select,
+body.dark .form-container input[type="number"] {
+    background-color: var(--input-background);
+    color: var(--input-text);
+    border-color: var(--border-color);
+}
+
+/* Estilos para el modo oscuro - Modal de Edición de Movimiento */
+body.dark .trade-details-modal-card h2 {
+   color: var(--primary-color);
+}
+
+body.dark .trade-details-list div {
+    border-bottom-color: #444; /* Borde más oscuro en tema oscuro */
+}
+
+body.dark .trade-details-list strong {
+    color: #ccc; /* Color para labels en oscuro */
+}
+
+body.dark .trade-details-list input[type="number"],
+body.dark .trade-details-list select {
+    background: var(--input-background);
+    color: var(--input-text);
+    border: 1.5px solid var(--border-color);
+}
+
+body.dark .trade-details-list input[type="number"]:focus,
+body.dark .trade-details-list select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(255,143,0,0.10); /* Sombra tema oscuro */
+}
+
+body.dark .trade-details-list button { /* Estilos ya definidos en modo oscuro */ }
+body.dark .trade-details-list button.clear { /* Estilos ya definidos en modo oscuro */ }
+
+/* Estilos para el mensaje de ayuda de cálculo de ROI */
+.roi-calculation-hint {
+    font-size: 0.85em;
+    color: var(--text-color);
     margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--border-color);
-    text-align: left; /* Alinear a la izquierda */
-    white-space: pre-line; /* Permite que los saltos de línea en el HTML se interpreten */
-    padding-left: 10px; /* Espacio a la izquierda */
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    text-align: left;
+    line-height: 1.5;
 }
 
-body.dark .threshold-info {
-    color: var(--text-color);
-    border-top-color: var(--border-color);
+body.dark .roi-calculation-hint {
+    color: #cccccc;
+}
+
+@media (max-width: 600px) {
+    .modern-card {
+        padding: 18px 6px 16px 6px;
+    }
+    .modern-card #capital-balance {
+        font-size: 1.5em;
+    }
+    .modern-card .period-filter {
+        font-size: 0.95em;
+        padding: 6px 10px;
+    }
+}
+
+/* Estilos para el desplegable de Ayuda ROI */
+.roi-calculation-hint .collapsible-header {
+    background-color: #f0f0f0; /* Un fondo ligero para el encabezado */
+    color: #333; /* Color de texto */
+    cursor: pointer;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+    border-radius: 5px;
+    margin-bottom: 5px; /* Espacio entre el encabezado y el contenido */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.roi-calculation-hint .collapsible-header:hover {
+    background-color: #e0e0e0; /* Cambio de color al pasar el ratón */
+}
+
+.roi-calculation-hint .collapsible-header .icon {
+    transition: transform 0.2s ease;
+}
+
+.roi-calculation-hint .collapsible-content {
+    padding: 0 10px;
+    overflow: hidden;
+    max-height: 0; /* Ocultar contenido por defecto */
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    background-color: #f9f9f9; /* Fondo para el contenido */
+    border-left: 3px solid #007bff; /* Barra lateral de color */
+    border-radius: 0 0 5px 5px;
+}
+
+.roi-calculation-hint .collapsible-content.active {
+    max-height: 500px; /* Altura máxima cuando está activo (ajustar si es necesario) */
+    padding: 10px;
+}
+
+.roi-calculation-hint .collapsible-header.active .icon {
+    transform: rotate(180deg); /* Rotar icono al desplegar */
+}
+
+/* Estilos para el enlace dentro del desplegable */
+.roi-calculation-hint .roi-calculator-link {
+    color: #007bff; /* Un color distintivo para el enlace */
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.roi-calculation-hint .roi-calculator-link:hover {
+    color: #0056b3; /* Cambio de color al pasar el ratón sobre el enlace */
+    text-decoration: none;
+}
+
+/* Estilos de tema oscuro para el desplegable */
+body.dark .roi-calculation-hint .collapsible-header {
+    background-color: #3c3c3c; /* Fondo oscuro para el encabezado */
+    color: #f1f1f1; /* Color de texto claro */
+}
+
+body.dark .roi-calculation-hint .collapsible-header:hover {
+    background-color: #4a4a4a; /* Fondo más oscuro al pasar el ratón */
+}
+
+body.dark .roi-calculation-hint .collapsible-content {
+    background-color: #2d2d2d; /* Fondo oscuro para el contenido */
+    color: #f1f1f1; /* Color de texto claro */
+    border-left-color: #ff8f00; /* Usar color primario del tema oscuro */
+}
+
+body.dark .roi-calculation-hint .collapsible-content p,
+body.dark .roi-calculation-hint .collapsible-content ul,
+body.dark .roi-calculation-hint .collapsible-content li {
+    color: #f1f1f1; /* Asegurar que el texto dentro del contenido sea claro */
+}
+
+body.dark .roi-calculation-hint .roi-calculator-link {
+    color: #64b5f6; /* Azul claro para el enlace en tema oscuro */
+}
+
+body.dark .roi-calculation-hint .roi-calculator-link:hover {
+    color: #42a5f5; /* Azul más claro al pasar el ratón */
+}
+
+body.dark .nav-menu {
+    background-color: rgba(70, 90, 110, 0.15); /* Tono azul oscuro con transparencia en modo oscuro */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: -2px 0 10px var(--menu-shadow);
 }
