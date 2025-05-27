@@ -670,6 +670,115 @@ function renderStats() {
       // if (clampedPercentage < 5) { progressBarMarkerElement.style.left = '5%'; }
       // if (clampedPercentage > 95) { progressBarMarkerElement.style.left = '95%'; }
   }
+
+  // === Actualizar criterios de Calificación de Rendimiento ===
+  const winrateCriterionValue = document.querySelector('#criterion-winrate .criterion-value');
+  const pnlCriterionValue = document.querySelector('#criterion-pnl .criterion-value');
+  const drawdownCriterionValue = document.querySelector('#criterion-drawdown .criterion-value');
+  const ratioCriterionValue = document.querySelector('#criterion-ratio .criterion-value');
+  const avgpipsCriterionValue = document.querySelector('#criterion-avgpips .criterion-value');
+  const avgprofitCriterionValue = document.querySelector('#criterion-avgprofit .criterion-value');
+
+  const winrateCriterionScore = document.querySelector('#criterion-winrate .criterion-score');
+  const pnlCriterionScore = document.querySelector('#criterion-pnl .criterion-score');
+  const drawdownCriterionScore = document.querySelector('#criterion-drawdown .criterion-score');
+  const ratioCriterionScore = document.querySelector('#criterion-ratio .criterion-score');
+  const avgpipsCriterionScore = document.querySelector('#criterion-avgpips .criterion-score');
+  const avgprofitCriterionScore = document.querySelector('#criterion-avgprofit .criterion-score');
+
+  // Actualizar valores de los criterios
+  if (winrateCriterionValue) winrateCriterionValue.textContent = `${winRate}%`;
+  if (pnlCriterionValue) pnlCriterionValue.textContent = `${pnl.toFixed(2)} MXN`;
+  // Actualizar el Drawdown Máximo en la sección de calificación
+  if (drawdownCriterionValue) {
+    drawdownCriterionValue.textContent = `${worst.toFixed(2)} MXN`;
+  }
+  if (ratioCriterionValue) ratioCriterionValue.textContent = profitFactor;
+  if (avgpipsCriterionValue) avgpipsCriterionValue.textContent = `${avgPips.toFixed(3)} pips`;
+  if (avgprofitCriterionValue) avgprofitCriterionValue.textContent = `${avgProfit.toFixed(2)} MXN`;
+
+  // Determinar puntuación para cada criterio
+  let totalScore = 0;
+
+  // Win Rate >= 60%
+  if (parseFloat(winRate) >= 60) {
+    if (winrateCriterionScore) winrateCriterionScore.textContent = '✅';
+    totalScore++;
+  } else {
+    if (winrateCriterionScore) winrateCriterionScore.textContent = '❌';
+  }
+
+  // PNL Final > 0
+  if (pnl > 0) {
+    if (pnlCriterionScore) pnlCriterionScore.textContent = '✅';
+    totalScore++;
+  } else {
+    if (pnlCriterionScore) pnlCriterionScore.textContent = '❌';
+  }
+
+  // Drawdown Máximo es 0 O PNL Final > 0 y Drawdown Máximo (valor absoluto) <= Pérdidas Totales (valor absoluto)
+  const absWorst = Math.abs(worst);
+  const absLosses = Math.abs(losses);
+  if (worst === 0 || (pnl > 0 && absWorst <= absLosses)) {
+    if (drawdownCriterionScore) drawdownCriterionScore.textContent = '✅';
+    totalScore++;
+  } else {
+    if (drawdownCriterionScore) drawdownCriterionScore.textContent = '❌';
+  }
+
+  // Ratio Beneficio/Riesgo >= 1.50 (ajustado basado en la nota)
+  if (parseFloat(profitFactor) >= 1.50) {
+    if (ratioCriterionScore) ratioCriterionScore.textContent = '✅';
+    totalScore++;
+  } else {
+    if (ratioCriterionScore) ratioCriterionScore.textContent = '❌';
+  }
+
+  // Promedio Pips por Trade > 5 pips
+  if (avgPips > 5) {
+    if (avgpipsCriterionScore) avgpipsCriterionScore.textContent = '✅';
+    totalScore++;
+  } else {
+    if (avgpipsCriterionScore) avgpipsCriterionScore.textContent = '❌';
+  }
+
+  // Promedio Ganancia (MXN) > 10 MXN (solo si hay operaciones ganadoras).
+  if (winningTrades > 0 && avgProfit > 10) {
+    if (avgprofitCriterionScore) avgprofitCriterionScore.textContent = '✅';
+    totalScore++;
+  } else {
+     if (avgprofitCriterionScore) avgprofitCriterionScore.textContent = '❌';
+  }
+
+  // Calcular la calificación de rendimiento en base a la puntuación total
+  let performanceRating = '';
+  if (totalScore === 6) {
+    performanceRating = 'Excelente (6/6 criterios cumplidos)';
+  } else if (totalScore >= 4) {
+    performanceRating = 'Bueno (4-5/6 criterios cumplidos)';
+  } else if (totalScore >= 2) {
+    performanceRating = 'Regular (2-3/6 criterios cumplidos)';
+  } else {
+    performanceRating = 'Mejorable (0-1/6 criterios cumplidos)';
+  }
+
+  // Actualizar el resumen de la calificación
+  const performanceRatingSummaryElement = document.getElementById('performanceRatingSummary');
+  if (performanceRatingSummaryElement) {
+    performanceRatingSummaryElement.textContent = `Calificación: ${performanceRating}`;
+  }
+
+  // Actualizar la barra de progreso de rendimiento
+  const performanceProgressBarFill = document.getElementById('performanceProgressBarFill');
+  const performanceProgressBarMarker = document.getElementById('performanceProgressBarMarker');
+  const percentage = (totalScore / 6) * 100; // Basado en 6 criterios
+  if (performanceProgressBarFill) {
+    performanceProgressBarFill.style.width = `${percentage}%`;
+    performanceProgressBarFill.style.backgroundColor = percentage >= 80 ? '#4CAF50' : percentage >= 50 ? '#ffeb3b' : '#f44336';
+  }
+  if (performanceProgressBarMarker) {
+    performanceProgressBarMarker.style.left = `${percentage}%`;
+  }
 }
 
 function saveData() {
